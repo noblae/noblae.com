@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Noblae</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Cormorant:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+
+<header class="top">
+  <div class="nav-inner">
+    <a class="wordmark" href="index.html">Noblae</a>
+    <nav class="links">
+      <a href="index.html" class="active">Home</a>
+      <a href="poetry.html">Poetry</a>
+      <!-- hidden for now; uncomment to re-enable
+      <a href="fights.html">Fights</a>
+      <a href="artwork.html">Artwork</a>
+      <a href="purchase.html">Purchase</a>
+      -->
+      <a href="essays.html">Essays</a>
+      <a href="images.html">Images</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+
+  <!-- HOME -->
+  <section class="view active" id="home">
+    <div class="home-hero">
+      <h1 class="hero-title">Noblae</h1>
+    </div>
+
+    <!-- newest poems, essays and fights, filled in automatically from
+         poetry.html, essays.html and fights.html (newest first) -->
+    <div class="feed" id="feed"></div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <span class="label">&copy; Noblae</span>
+    <div class="icon-row">
+      <a href="https://www.instagram.com/noblaee" title="Instagram" aria-label="Instagram" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1" fill="currentColor" stroke="none"/></svg>
+      </a>
+      <a href="mailto:david@noblae.com" title="Email" aria-label="Email">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+      </a>
+      <!-- hidden with the shop; uncomment to re-enable
+      <a href="purchase.html" title="Donate" aria-label="Donate">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-4.5-9.5-9A5 5 0 0112 6a5 5 0 019.5 6c-2.5 4.5-9.5 9-9.5 9z"/></svg>
+      </a>
+      -->
+      <a href="https://www.youtube.com/@davidvdinan" title="YouTube" aria-label="YouTube" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="9,6 19,12 9,18"/></svg>
+      </a>
+    </div>
+  </div>
+</footer>
+
+<script src="shared.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  // ---------- home feed ----------
+  // Pulls every entry from the Poetry, Essays and Fights pages, so new
+  // content only ever needs to be added on its own page.
+  var SOURCES = [
+    { url: 'poetry.html', selector: '.poem',       kind: 'poem'  },
+    { url: 'essays.html', selector: '.essay',      kind: 'essay' },
+    { url: 'fights.html', selector: '.fight-card', kind: 'fight' }
+  ];
+  var DATE_RE = /(\d{2})\.(\d{2})\.(\d{2})/;
+
+  var feed = document.getElementById('feed');
+
+  function load(src){
+    return fetch(src.url)
+      .then(function(r){ return r.ok ? r.text() : ''; })
+      .then(function(html){
+        var doc = new DOMParser().parseFromString(html, 'text/html');
+        return Array.prototype.slice.call(doc.querySelectorAll(src.selector)).map(function(el){
+          return entryFrom(el, src.kind);
+        }).filter(Boolean);
+      })
+      .catch(function(){ return []; });
+  }
+
+  // Finds the entry's MM.DD.YY date, pulls it out of the entry, and
+  // returns the entry with the date placed at its bottom-right.
+  function entryFrom(el, kind){
+    var dateEl = el.querySelector('.poem-date, .entry-date, .fight-meta .tag');
+    var m = dateEl && dateEl.textContent.match(DATE_RE);
+    if (!m) return null;
+    var label = m[0];
+    if (dateEl.classList.contains('tag')){
+      dateEl.textContent = dateEl.textContent.replace(DATE_RE, '').replace(/[\s\u00b7]+$/, '');
+    } else {
+      dateEl.remove();
+    }
+
+    var item = document.createElement('article');
+    item.className = 'feed-item feed-' + kind;
+    item.appendChild(document.importNode(el, true));
+    var date = document.createElement('span');
+    date.className = 'entry-date feed-date';
+    date.textContent = label;
+    item.appendChild(date);
+
+    return { node: item, time: new Date(2000 + +m[3], +m[1] - 1, +m[2]).getTime() };
+  }
+
+  Promise.all(SOURCES.map(load)).then(function(lists){
+    var entries = [].concat.apply([], lists);
+    // newest first; entries on the same day keep their page order
+    entries.forEach(function(e, i){ e.order = i; });
+    entries.sort(function(a, b){ return (b.time - a.time) || (a.order - b.order); });
+    entries.forEach(function(e){ feed.appendChild(e.node); });
+  });
+
+})();
+</script>
+</body>
+</html>

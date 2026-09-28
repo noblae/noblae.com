@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Noblae — Admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Cormorant:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared.css">
+<style>
+  /* admin-only styles */
+  [hidden]{display:none !important;}
+  .admin-box{border:1px solid var(--hair);background:var(--card);padding:22px;margin-bottom:28px;}
+  .admin-box h3{font-family:'Cormorant',serif;font-weight:500;font-size:1.4rem;margin:0 0 12px;color:var(--bone);}
+  .admin-box p, .admin-box li{font-family:'IBM Plex Mono',monospace;font-size:.8rem;line-height:1.7;color:var(--bone-dim);}
+  .admin-box ol{padding-left:20px;margin:0 0 16px;}
+  .admin-box a{color:var(--bone);}
+  .admin-input{
+    width:100%;padding:11px 12px;margin:0 0 12px;
+    background:var(--void);color:var(--bone);border:1px solid var(--hair);
+    font-family:'IBM Plex Mono',monospace;font-size:.85rem;
+  }
+  .admin-input:focus{outline:none;border-color:var(--acid);}
+  .admin-btn{
+    font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;
+    border:1px solid var(--bone);background:var(--bone);color:var(--void);
+    padding:12px 18px;cursor:pointer;
+  }
+  .admin-btn:hover{background:var(--field-orange);border-color:var(--field-orange);color:var(--bone);}
+  .admin-btn:disabled{opacity:.4;cursor:default;background:var(--bone);border-color:var(--bone);color:var(--void);}
+  .admin-btn.ghost{background:none;color:var(--bone-dim);border-color:var(--hair);}
+  .admin-btn.ghost:hover{color:var(--bone);border-color:var(--acid);background:none;}
+  .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
+  .status{font-family:'IBM Plex Mono',monospace;font-size:.8rem;color:var(--bone-dim);min-height:1.4em;margin:12px 0 0;}
+  .status.err{color:var(--acid);}
+  .status.ok{color:var(--bone);}
+
+  .drop{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;
+    border:2px dashed var(--hair);padding:44px 16px;text-align:center;cursor:pointer;
+    font-family:'IBM Plex Mono',monospace;color:var(--bone-dim);font-size:.85rem;
+    transition:border-color .15s, background .15s;
+  }
+  .drop strong{color:var(--bone);font-size:1rem;font-weight:500;}
+  .drop:hover, .drop.over{border-color:var(--acid);background:rgba(224,71,90,.06);}
+
+  .thumbs{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;margin-top:18px;}
+  .thumb{border:1px solid var(--hair);background:var(--void);position:relative;display:flex;flex-direction:column;}
+  .thumb img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block;}
+  .thumb .admin-input{margin:0;border:none;border-top:1px solid var(--hair);font-size:.75rem;}
+  .thumb .x{
+    position:absolute;top:6px;right:6px;width:28px;height:28px;border-radius:50%;
+    border:1px solid var(--bone);background:rgba(18,14,12,.8);color:var(--bone);
+    font-family:'IBM Plex Mono',monospace;cursor:pointer;line-height:1;
+  }
+  .thumb .x:hover{background:var(--field-orange);}
+  .thumb .cap{font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:var(--bone-dim);padding:8px 10px;border-top:1px solid var(--hair);min-height:2.4em;}
+  .thumb .state{font-family:'IBM Plex Mono',monospace;font-size:.7rem;padding:6px 10px;color:var(--bone-dim);border-top:1px solid var(--hair);}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="nav-inner">
+    <a class="wordmark" href="index.html">Noblae</a>
+    <nav class="links">
+      <a href="images.html">View Images page</a>
+      <button id="disconnectBtn" type="button" hidden>Log out</button>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="view active" id="admin">
+    <div class="field-band field-void">
+      <h2 class="section-title">Admin</h2>
+    </div>
+
+    <div class="admin-box" id="localNote" hidden>
+      <h3>Local test mode</h3>
+      <p>You opened this page from your own computer, so nothing goes to the live site.
+      Uploads are saved into this project folder instead. Any token works here, e.g. "test".</p>
+    </div>
+
+    <!-- STEP 0: connect (only needed once per device) -->
+    <div class="admin-box" id="connectBox" hidden>
+      <h3>Connect this device</h3>
+      <p>This only has to be done once on each phone or computer you use.</p>
+      <ol>
+        <li>Open <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener">GitHub &rarr; new access token</a> (signed in as the account that owns the site).</li>
+        <li>Name it "noblae admin" and set an expiration.</li>
+        <li>Under <b>Repository access</b>, pick <b>Only select repositories</b> &rarr; <b>noblae/noblae.com</b>.</li>
+        <li>Under <b>Permissions &rarr; Contents</b>, choose <b>Read and write</b>.</li>
+        <li>Click <b>Generate token</b>, copy it, and paste it below.</li>
+      </ol>
+      <input class="admin-input" id="tokenInput" type="password" placeholder="github_pat_..." autocomplete="off">
+      <button class="admin-btn" id="connectBtn" type="button">Connect</button>
+      <p class="status" id="connectStatus"></p>
+    </div>
+
+    <!-- STEP 1: add images -->
+    <div class="admin-box" id="uploadBox" hidden>
+      <h3>Add images</h3>
+      <label class="drop" id="drop">
+        <strong>Drop photos here</strong>
+        <span>or tap to choose from your device</span>
+        <input type="file" id="fileInput" accept="image/*" multiple hidden>
+      </label>
+      <div class="thumbs" id="pending"></div>
+      <div class="row" style="margin-top:18px;">
+        <button class="admin-btn" id="publishBtn" type="button" disabled>Publish</button>
+        <button class="admin-btn ghost" id="clearBtn" type="button" hidden>Clear</button>
+      </div>
+      <p class="status" id="uploadStatus"></p>
+    </div>
+
+    <!-- STEP 2: what's on the site now -->
+    <div class="admin-box" id="currentBox" hidden>
+      <h3>On the site now</h3>
+      <p>Newest first. Images added straight to the images/gallery folder on GitHub show at the end. Click &times; to remove an image from the site.</p>
+      <div class="thumbs" id="current"></div>
+      <p class="status" id="currentStatus"></p>
+    </div>
+  </section>
+</main>
+
+<script src="gallery.js"></script>
+<script>
+(function(){
+  "use strict";
+
+  // ---------- settings ----------
+  var REPO = 'noblae/noblae.com';
+  var BRANCH = 'main';
+  var MANIFEST = 'images.json';
+  var FOLDER = 'images/gallery/';
+  var MAX_EDGE = 2400;           // longest side of uploaded photos, in px
+  var TOKEN_KEY = 'noblae-admin-token';
+
+  // Opened from localhost (via admin-dev-server.py), everything goes to a
+  // stand-in for GitHub that saves into the local project folder instead.
+  var LOCAL = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+  var API_BASE = LOCAL ? '/__dev_api' : 'https://api.github.com';
+  var RAW_BASE = LOCAL ? '' : 'https://raw.githubusercontent.com/' + REPO + '/' + BRANCH + '/';
+  if (LOCAL) document.getElementById('localNote').hidden = false;
+
+  var $ = function(id){ return document.getElementById(id); };
+  var token = null;
+  try { token = localStorage.getItem(TOKEN_KEY); } catch(e){}
+
+  function setStatus(el, msg, kind){
+    el.textContent = msg || '';
+    el.className = 'status' + (kind ? ' ' + kind : '');
+  }
+
+  // ---------- GitHub API ----------
+  function api(path, opts){
+    opts = opts || {};
+    return fetch(API_BASE + '/repos/' + REPO + path, {
+      method: opts.method || 'GET',
+      cache: 'no-store',
+      headers: {
+        'Authorization': 'Bearer ' + token,
+        'Accept': 'application/vnd.github+json',
+        'X-GitHub-Api-Version': '2022-11-28'
+      },
+      body: opts.body ? JSON.stringify(opts.body) : undefined
+    }).then(function(r){
+      if (r.status === 404 && opts.allow404) return null;
+      return r.json().catch(function(){ return {}; }).then(function(data){
+        if (!r.ok){
+          var err = new Error(data.message || ('GitHub error ' + r.status));
+          err.status = r.status;
+          throw err;
+        }
+        return data;
+      });
+    });
+  }
+
+  function b64ToText(b64){
+    var bin = atob(b64.replace(/\n/g, ''));
+    var bytes = new Uint8Array(bin.length);
+    for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    return new TextDecoder().decode(bytes);
+  }
+  function textToB64(text){
+    var bytes = new TextEncoder().encode(text);
+    var bin = '';
+    for (var i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+    return btoa(bin);
+  }
+  function blobToB64(blob){
+    return new Promise(function(resolve, reject){
+      var fr = new FileReader();
+      fr.onload = function(){ resolve(String(fr.result).split(',')[1]); };
+      fr.onerror = reject;
+      fr.readAsDataURL(blob);
+    });
+  }
+
+  function getManifest(){
+    return api('/contents/' + MANIFEST + '?ref=' + BRANCH, { allow404: true }).then(function(file){
+      if (!file) return { list: [], sha: null };
+      return { list: JSON.parse(b64ToText(file.content) || '[]'), sha: file.sha };
+    });
+  }
+  // Re-reads the manifest right before saving so nothing is lost if it
+  // changed in the meantime; retries once on a conflict.
+  function updateManifest(change, message, retried){
+    return getManifest().then(function(m){
+      var list = change(m.list);
+      return api('/contents/' + MANIFEST, { method: 'PUT', body: {
+        message: message,
+        content: textToB64(JSON.stringify(list, null, 2) + '\n'),
+        branch: BRANCH,
+        sha: m.sha || undefined
+      }}).then(function(){ return list; });
+    }).catch(function(err){
+      if (!retried && (err.status === 409 || err.status === 422)) return updateManifest(change, message, true);
+      throw err;
+    });
+  }
+
+  // ---------- connect / log out ----------
+  function showConnected(on){
+    $('connectBox').hidden = on;
+    $('uploadBox').hidden = !on;
+    $('currentBox').hidden = !on;
+    $('disconnectBtn').hidden = !on;
+    if (on) loadCurrent();
+  }
+
+  $('connectBtn').addEventListener('click', function(){
+    var t = $('tokenInput').value.trim();
+    if (!t) return setStatus($('connectStatus'), 'Paste your token first.', 'err');
+    token = t;
+    setStatus($('connectStatus'), 'Checking…');
+    api('').then(function(repo){
+      if (!repo.permissions || !repo.permissions.push){
+        throw new Error('That token can see the site but can’t change it. Set Contents to "Read and write".');
+      }
+      try { localStorage.setItem(TOKEN_KEY, t); } catch(e){}
+      $('tokenInput').value = '';
+      setStatus($('connectStatus'), '');
+      showConnected(true);
+    }).catch(function(err){
+      token = null;
+      var msg = err.status === 401 ? 'That token didn’t work. Check it was copied fully.'
+              : err.status === 404 ? 'That token doesn’t have access to noblae/noblae.com.'
+              : err.message;
+      setStatus($('connectStatus'), msg, 'err');
+    });
+  });
+
+  $('disconnectBtn').addEventListener('click', function(){
+    try { localStorage.removeItem(TOKEN_KEY); } catch(e){}
+    token = null;
+    showConnected(false);
+  });
+
+  // ---------- picking photos ----------
+  var pending = [];   // { file, url, caption, el }
+
+  function addFiles(files){
+    Array.prototype.forEach.call(files, function(file){
+      if (!/^image\//.test(file.type) && !/\.(heic|heif)$/i.test(file.name)) return;
+      var item = { file: file, url: URL.createObjectURL(file), caption: '' };
+      var el = document.createElement('div');
+      el.className = 'thumb';
+      var img = document.createElement('img');
+      img.src = item.url; img.alt = '';
+      var x = document.createElement('button');
+      x.className = 'x'; x.type = 'button'; x.textContent = '×'; x.title = 'Remove';
+      x.addEventListener('click', function(){
+        pending.splice(pending.indexOf(item), 1);
+        URL.revokeObjectURL(item.url);
+        el.remove();
+        refreshPending();
+      });
+      var cap = document.createElement('input');
+      cap.className = 'admin-input'; cap.placeholder = 'caption (optional)';
+      cap.addEventListener('input', function(){ item.caption = cap.value.trim(); });
+      var state = document.createElement('div');
+      state.className = 'state'; state.hidden = true;
+      el.appendChild(img); el.appendChild(x); el.appendChild(cap); el.appendChild(state);
+      item.el = el; item.stateEl = state; item.removeBtn = x; item.capInput = cap;
+      $('pending').appendChild(el);
+      pending.push(item);
+    });
+    refreshPending();
+  }
+
+  function refreshPending(){
+    var n = pending.length;
+    $('publishBtn').disabled = n === 0;
+    $('publishBtn').textContent = n ? 'Publish ' + n + ' image' + (n === 1 ? '' : 's') : 'Publish';
+    $('clearBtn').hidden = n === 0;
+  }
+
+  var drop = $('drop');
+  $('fileInput').addEventListener('change', function(){ addFiles(this.files); this.value = ''; });
+  ['dragenter', 'dragover'].forEach(function(ev){
+    drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.add('over'); });
+  });
+  ['dragleave', 'drop'].forEach(function(ev){
+    drop.addEventListener(ev, function(e){ e.preventDefault(); drop.classList.remove('over'); });
+  });
+  drop.addEventListener('drop', function(e){ addFiles(e.dataTransfer.files); });
+
+  $('clearBtn').addEventListener('click', function(){
+    pending.forEach(function(p){ URL.revokeObjectURL(p.url); });
+    pending = [];
+    $('pending').innerHTML = '';
+    refreshPending();
+    setStatus($('uploadStatus'), '');
+  });
+
+  // ---------- shrinking photos before upload ----------
+  // Big phone photos are scaled down to MAX_EDGE and re-saved, which also
+  // strips hidden location data. GIFs are uploaded untouched so they keep animating.
+  function prepare(file){
+    if (file.type === 'image/gif') return Promise.resolve({ blob: file, ext: 'gif' });
+    return createImageBitmap(file).then(function(bmp){
+      var scale = Math.min(1, MAX_EDGE / Math.max(bmp.width, bmp.height));
+      var canvas = document.createElement('canvas');
+      canvas.width = Math.round(bmp.width * scale);
+      canvas.height = Math.round(bmp.height * scale);
+      canvas.getContext('2d').drawImage(bmp, 0, 0, canvas.width, canvas.height);
+      var png = file.type === 'image/png';
+      return new Promise(function(resolve){
+        canvas.toBlob(function(blob){ resolve({ blob: blob, ext: png ? 'png' : 'jpg' }); },
+                      png ? 'image/png' : 'image/jpeg', 0.85);
+      });
+    }).catch(function(){
+      throw new Error('can’t read this photo type — save it as a JPEG and try again');
+    });
+  }
+
+  function slug(name){
+    return name.replace(/\.[^.]+$/, '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 40) || 'image';
+  }
+  function stamp(d){
+    var p = function(n){ return (n < 10 ? '0' : '') + n; };
+    return d.getFullYear() + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds());
+  }
+  function mmddyy(d){
+    var p = function(n){ return (n < 10 ? '0' : '') + n; };
+    return p(d.getMonth() + 1) + '.' + p(d.getDate()) + '.' + String(d.getFullYear()).slice(2);
+  }
+
+  // ---------- publishing ----------
+  $('publishBtn').addEventListener('click', function(){
+    var items = pending.slice();
+    var added = [];
+    var now = new Date();
+    $('publishBtn').disabled = true;
+    $('clearBtn').hidden = true;
+    setStatus($('uploadStatus'), 'Uploading…');
+
+    // upload one at a time so each photo shows its own progress
+    var chain = Promise.resolve();
+    items.forEach(function(item, i){
+      chain = chain.then(function(){
+        item.removeBtn.hidden = true;
+        item.capInput.disabled = true;
+        item.stateEl.hidden = false;
+        item.stateEl.textContent = 'uploading…';
+        return prepare(item.file).then(function(prep){
+          var path = FOLDER + stamp(now) + '-' + (i + 1) + '-' + slug(item.file.name) + '.' + prep.ext;
+          return blobToB64(prep.blob).then(function(b64){
+            return api('/contents/' + path, { method: 'PUT', body: {
+              message: 'Add image ' + path, content: b64, branch: BRANCH
+            }});
+          }).then(function(){
+            added.push({ src: path, caption: item.caption, date: mmddyy(now) });
+            item.stateEl.textContent = 'uploaded ✓';
+            item.done = true;
+          });
+        }).catch(function(err){
+          item.stateEl.textContent = 'failed: ' + err.message;
+          item.removeBtn.hidden = false;
+          item.capInput.disabled = false;
+        });
+      });
+    });
+
+    chain.then(function(){
+      if (!added.length) throw new Error('Nothing was uploaded.');
+      // newest first; keeps the order the photos were picked in
+      return updateManifest(function(list){ return added.concat(list); },
+                            'Add ' + added.length + ' image' + (added.length === 1 ? '' : 's') + ' to gallery');
+    }).then(function(){
+      pending = pending.filter(function(p){
+        if (p.done){ URL.revokeObjectURL(p.url); p.el.remove(); }
+        return !p.done;
+      });
+      refreshPending();
+      loadCurrent();
+      var failed = pending.length ? ' ' + pending.length + ' failed; see above.' : '';
+      setStatus($('uploadStatus'), (LOCAL ? 'Saved! Refresh the Images page to see it.' : 'Published! It will show on the site in about a minute.') + failed, pending.length ? 'err' : 'ok');
+    }).catch(function(err){
+      refreshPending();
+      setStatus($('uploadStatus'), 'Something went wrong: ' + err.message, 'err');
+    });
+  });
+
+  // ---------- current images ----------
+  function loadCurrent(){
+    setStatus($('currentStatus'), 'Loading…');
+    Promise.all([getManifest(), api('/contents/' + FOLDER.replace(/\/$/, '') + '?ref=' + BRANCH, { allow404: true })]).then(function(r){
+      renderCurrent(window.NOBLAE_mergeImages(r[0].list, r[1]));
+    }).catch(function(err){
+      if (err.status === 401){ $('disconnectBtn').click(); setStatus($('connectStatus'), 'Your token expired. Connect again.', 'err'); return; }
+      setStatus($('currentStatus'), 'Couldn’t load images: ' + err.message, 'err');
+    });
+  }
+
+  function renderCurrent(list){
+    var box = $('current');
+    box.innerHTML = '';
+    setStatus($('currentStatus'), list.length ? '' : 'No images yet.');
+    list.forEach(function(entry){
+      var el = document.createElement('div');
+      el.className = 'thumb';
+      var img = document.createElement('img');
+      // straight from GitHub, so brand-new uploads show before the site rebuilds
+      img.src = RAW_BASE + entry.src;
+      img.alt = entry.caption || '';
+      img.loading = 'lazy';
+      var cap = document.createElement('div');
+      cap.className = 'cap';
+      cap.textContent = entry.manual ? 'added on GitHub' : (entry.caption || 'no caption') + ' · ' + (entry.date || '');
+      var x = document.createElement('button');
+      x.className = 'x'; x.type = 'button'; x.textContent = '×'; x.title = 'Remove from site';
+      x.addEventListener('click', function(){
+        if (!window.confirm('Remove this image from the site?')) return;
+        x.disabled = true;
+        cap.textContent = 'removing…';
+        removeImage(entry).then(function(){
+          loadCurrent();
+          setStatus($('currentStatus'), (LOCAL ? 'Removed.' : 'Removed. The site updates in about a minute.'), 'ok');
+        }).catch(function(err){
+          x.disabled = false;
+          setStatus($('currentStatus'), 'Couldn’t remove: ' + err.message, 'err');
+        });
+      });
+      el.appendChild(img); el.appendChild(x); el.appendChild(cap);
+      box.appendChild(el);
+    });
+  }
+
+  function deleteFile(path){
+    return api('/contents/' + path + '?ref=' + BRANCH, { allow404: true }).then(function(file){
+      if (!file) return;
+      return api('/contents/' + path, { method: 'DELETE', body: {
+        message: 'Delete image ' + path, sha: file.sha, branch: BRANCH
+      }});
+    });
+  }
+
+  function removeImage(entry){
+    // images added straight to the folder on GitHub aren't in images.json
+    if (entry.manual) return deleteFile(entry.src);
+    return updateManifest(function(list){
+      return list.filter(function(e){ return e.src !== entry.src; });
+    }, 'Remove image ' + entry.src).then(function(){
+      // then delete the file itself; if that fails the image is already off the site
+      return deleteFile(entry.src).catch(function(){});
+    });
+  }
+
+  showConnected(!!token);
+})();
+</script>
+</body>
+</html>
