@@ -79,7 +79,7 @@
       .then(function(r){ return r.ok ? r.json() : []; })
       .catch(function(){ return []; });
   }
-  Promise.all([getJSON('images.json'), getJSON(FOLDER_URL)])
+  Promise.all([getJSON('images.json?v=' + Date.now()), getJSON(FOLDER_URL)])
     .then(function(r){ return window.NOBLAE_mergeImages(r[0], r[1]); })
     .then(function(images){
       images.forEach(function(img){

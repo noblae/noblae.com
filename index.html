@@ -83,7 +83,10 @@
   var feed = document.getElementById('feed');
 
   function load(src){
-    return fetch(src.url)
+    // cache-bust: without this, browsers (and GitHub's CDN) can serve a
+    // stale copy of poetry.html/essays.html/fights.html here even right
+    // after the admin panel has updated the live file
+    return fetch(src.url + '?v=' + Date.now(), { cache: 'no-store' })
       .then(function(r){ return r.ok ? r.text() : ''; })
       .then(function(html){
         var doc = new DOMParser().parseFromString(html, 'text/html');
