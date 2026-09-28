@@ -23,6 +23,7 @@
     font-family:'IBM Plex Mono',monospace;font-size:.85rem;
   }
   .admin-input:focus{outline:none;border-color:var(--acid);}
+  textarea.admin-input{resize:vertical;min-height:140px;line-height:1.6;}
   .admin-btn{
     font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;
     border:1px solid var(--bone);background:var(--bone);color:var(--void);
@@ -32,6 +33,7 @@
   .admin-btn:disabled{opacity:.4;cursor:default;background:var(--bone);border-color:var(--bone);color:var(--void);}
   .admin-btn.ghost{background:none;color:var(--bone-dim);border-color:var(--hair);}
   .admin-btn.ghost:hover{color:var(--bone);border-color:var(--acid);background:none;}
+  .admin-btn.small{padding:8px 12px;font-size:.66rem;}
   .row{display:flex;gap:12px;flex-wrap:wrap;align-items:center;}
   .status{font-family:'IBM Plex Mono',monospace;font-size:.8rem;color:var(--bone-dim);min-height:1.4em;margin:12px 0 0;}
   .status.err{color:var(--acid);}
@@ -58,6 +60,28 @@
   .thumb .x:hover{background:var(--field-orange);}
   .thumb .cap{font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:var(--bone-dim);padding:8px 10px;border-top:1px solid var(--hair);min-height:2.4em;}
   .thumb .state{font-family:'IBM Plex Mono',monospace;font-size:.7rem;padding:6px 10px;color:var(--bone-dim);border-top:1px solid var(--hair);}
+
+  /* ---------- tabs ---------- */
+  .admin-tabs{display:flex;gap:10px;margin-bottom:28px;flex-wrap:wrap;}
+  .tab-btn{
+    font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;
+    border:1px solid var(--hair);background:none;color:var(--bone-dim);
+    padding:11px 20px;cursor:pointer;
+  }
+  .tab-btn:hover{color:var(--bone);border-color:var(--acid);}
+  .tab-btn.active{background:var(--bone);color:var(--void);border-color:var(--bone);}
+
+  /* ---------- entry list rows (poems / essays) ---------- */
+  .entry-row{
+    border:1px solid var(--hair);background:var(--void);
+    padding:14px 16px;margin-bottom:10px;
+    display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;
+  }
+  .entry-row .meta{flex:1;min-width:220px;}
+  .entry-row .meta h4{margin:0 0 4px;font-family:'Cormorant',serif;font-weight:500;font-size:1.08rem;color:var(--bone);}
+  .entry-row .meta .d{font-family:'IBM Plex Mono',monospace;font-size:.7rem;letter-spacing:.06em;color:var(--bone-dim);}
+  .entry-row .meta .snip{font-family:'IBM Plex Mono',monospace;font-size:.75rem;line-height:1.5;color:var(--bone-dim);margin-top:8px;max-width:62ch;}
+  .entry-row .actions{display:flex;gap:8px;flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -66,7 +90,7 @@
   <div class="nav-inner">
     <a class="wordmark" href="index.html">Noblae</a>
     <nav class="links">
-      <a href="images.html">View Images page</a>
+      <a href="index.html">View site</a>
       <button id="disconnectBtn" type="button" hidden>Log out</button>
     </nav>
   </div>
@@ -100,29 +124,88 @@
       <p class="status" id="connectStatus"></p>
     </div>
 
-    <!-- STEP 1: add images -->
-    <div class="admin-box" id="uploadBox" hidden>
-      <h3>Add images</h3>
-      <label class="drop" id="drop">
-        <strong>Drop photos here</strong>
-        <span>or tap to choose from your device</span>
-        <input type="file" id="fileInput" accept="image/*" multiple hidden>
-      </label>
-      <div class="thumbs" id="pending"></div>
-      <div class="row" style="margin-top:18px;">
-        <button class="admin-btn" id="publishBtn" type="button" disabled>Publish</button>
-        <button class="admin-btn ghost" id="clearBtn" type="button" hidden>Clear</button>
-      </div>
-      <p class="status" id="uploadStatus"></p>
+    <!-- tab bar: switches between the three content types -->
+    <div class="admin-tabs" id="tabs" hidden>
+      <button type="button" class="tab-btn active" data-tab="images">Images</button>
+      <button type="button" class="tab-btn" data-tab="poems">Poems</button>
+      <button type="button" class="tab-btn" data-tab="essays">Essays</button>
     </div>
 
-    <!-- STEP 2: what's on the site now -->
-    <div class="admin-box" id="currentBox" hidden>
-      <h3>On the site now</h3>
-      <p>Newest first. Images added straight to the images/gallery folder on GitHub show at the end. Click &times; to remove an image from the site.</p>
-      <div class="thumbs" id="current"></div>
-      <p class="status" id="currentStatus"></p>
+    <!-- ================= IMAGES ================= -->
+    <div id="panel-images" hidden>
+
+      <div class="admin-box" id="uploadBox">
+        <h3>Add images</h3>
+        <label class="drop" id="drop">
+          <strong>Drop photos here</strong>
+          <span>or tap to choose from your device</span>
+          <input type="file" id="fileInput" accept="image/*" multiple hidden>
+        </label>
+        <div class="thumbs" id="pending"></div>
+        <div class="row" style="margin-top:18px;">
+          <button class="admin-btn" id="publishBtn" type="button" disabled>Publish</button>
+          <button class="admin-btn ghost" id="clearBtn" type="button" hidden>Clear</button>
+        </div>
+        <p class="status" id="uploadStatus"></p>
+      </div>
+
+      <div class="admin-box" id="currentBox">
+        <h3>On the site now</h3>
+        <p>Newest first. Images added straight to the images/gallery folder on GitHub show at the end. Click &times; to remove an image from the site.</p>
+        <div class="thumbs" id="current"></div>
+        <p class="status" id="currentStatus"></p>
+      </div>
+
     </div>
+
+    <!-- ================= POEMS ================= -->
+    <div id="panel-poems" hidden>
+
+      <div class="admin-box">
+        <h3 id="poemFormTitle">Add a poem</h3>
+        <input class="admin-input" id="poemTitle" type="text" placeholder="Title">
+        <input class="admin-input" id="poemDate" type="date">
+        <textarea class="admin-input" id="poemText" rows="8" placeholder="Poem text. Each line break becomes a new line on the site."></textarea>
+        <div class="row">
+          <button class="admin-btn" id="poemSaveBtn" type="button">Publish poem</button>
+          <button class="admin-btn ghost" id="poemCancelBtn" type="button" hidden>Cancel edit</button>
+        </div>
+        <p class="status" id="poemFormStatus"></p>
+      </div>
+
+      <div class="admin-box">
+        <h3>On the site now</h3>
+        <p>Edit changes a poem's title, date or text. Delete removes it from the site.</p>
+        <div id="poemItems"></div>
+        <p class="status" id="poemListStatus"></p>
+      </div>
+
+    </div>
+
+    <!-- ================= ESSAYS ================= -->
+    <div id="panel-essays" hidden>
+
+      <div class="admin-box">
+        <h3 id="essayFormTitle">Add an essay</h3>
+        <input class="admin-input" id="essayTitle" type="text" placeholder="Title">
+        <input class="admin-input" id="essayDate" type="date">
+        <textarea class="admin-input" id="essayText" rows="10" placeholder="Essay text. Leave a blank line between paragraphs."></textarea>
+        <div class="row">
+          <button class="admin-btn" id="essaySaveBtn" type="button">Publish essay</button>
+          <button class="admin-btn ghost" id="essayCancelBtn" type="button" hidden>Cancel edit</button>
+        </div>
+        <p class="status" id="essayFormStatus"></p>
+      </div>
+
+      <div class="admin-box">
+        <h3>On the site now</h3>
+        <p>Edit changes an essay's title, date or text. Delete removes it from the site.</p>
+        <div id="essayItems"></div>
+        <p class="status" id="essayListStatus"></p>
+      </div>
+
+    </div>
+
   </section>
 </main>
 
@@ -224,13 +307,65 @@
     });
   }
 
+  // ---------- generic page (HTML file) read/write, used by Poems and Essays ----------
+  // Reads a whole page (poetry.html / essays.html) as text plus its git sha.
+  function getPage(path){
+    return api('/contents/' + path + '?ref=' + BRANCH, { allow404: true }).then(function(file){
+      if (!file) throw new Error('Could not find ' + path + ' in the repo.');
+      return { text: b64ToText(file.content), sha: file.sha };
+    });
+  }
+  function putPage(path, text, sha, message){
+    return api('/contents/' + path, { method: 'PUT', body: {
+      message: message, content: textToB64(text), branch: BRANCH, sha: sha
+    }});
+  }
+  // Re-fetches the page fresh, hands its parsed document to mutateFn to
+  // add/replace/remove an entry, then writes the result back. mutateFn
+  // returns false if the entry it was looking for couldn't be found (e.g.
+  // it was already deleted elsewhere), which stops the save with an error.
+  // Retries once on a save conflict, same pattern as updateManifest.
+  function mutatePage(path, mutateFn, message, retried){
+    return getPage(path).then(function(p){
+      var doc = new DOMParser().parseFromString(p.text, 'text/html');
+      var ok = mutateFn(doc);
+      if (ok === false) throw new Error('Could not find that entry — the page may have changed. Refresh and try again.');
+      var html = '<!DOCTYPE html>\n' + doc.documentElement.outerHTML + '\n';
+      return putPage(path, html, p.sha, message);
+    }).catch(function(err){
+      if (!retried && (err.status === 409 || err.status === 422)) return mutatePage(path, mutateFn, message, true);
+      throw err;
+    });
+  }
+
+  // MM.DD.YY <-> YYYY-MM-DD (the <input type="date"> format), for the date field
+  function fromISO(iso){
+    var m = iso.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    return m ? (m[2] + '.' + m[3] + '.' + m[1].slice(2)) : '';
+  }
+  function toISO(mmddyy){
+    var m = mmddyy.match(/^(\d{2})\.(\d{2})\.(\d{2})$/);
+    return m ? ('20' + m[3] + '-' + m[1] + '-' + m[2]) : '';
+  }
+
+  // identifies an existing entry by its title + date, so edits/deletes still
+  // find the right block even if new entries were added above it meanwhile
+  function keyOf(title, date){ return title + '||' + date; }
+
   // ---------- connect / log out ----------
   function showConnected(on){
     $('connectBox').hidden = on;
-    $('uploadBox').hidden = !on;
-    $('currentBox').hidden = !on;
+    $('tabs').hidden = !on;
     $('disconnectBtn').hidden = !on;
-    if (on) loadCurrent();
+    if (on){
+      poemsLoaded = false; essaysLoaded = false;
+      showTab('images');
+      loadCurrent();
+    } else {
+      $('panel-images').hidden = true;
+      $('panel-poems').hidden = true;
+      $('panel-essays').hidden = true;
+    }
   }
 
   $('connectBtn').addEventListener('click', function(){
@@ -260,6 +395,23 @@
     token = null;
     showConnected(false);
   });
+
+  // ---------- tabs ----------
+  var tabBtns = Array.prototype.slice.call(document.querySelectorAll('.tab-btn'));
+  var panels = { images: $('panel-images'), poems: $('panel-poems'), essays: $('panel-essays') };
+  var poemsLoaded = false, essaysLoaded = false;
+
+  function showTab(name){
+    tabBtns.forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-tab') === name); });
+    Object.keys(panels).forEach(function(k){ panels[k].hidden = (k !== name); });
+    if (name === 'poems' && !poemsLoaded) loadPoems();
+    if (name === 'essays' && !essaysLoaded) loadEssays();
+  }
+  tabBtns.forEach(function(b){
+    b.addEventListener('click', function(){ showTab(b.getAttribute('data-tab')); });
+  });
+
+  // ================= IMAGES (unchanged from before) =================
 
   // ---------- picking photos ----------
   var pending = [];   // { file, url, caption, el }
@@ -469,6 +621,325 @@
     }, 'Remove image ' + entry.src).then(function(){
       // then delete the file itself; if that fails the image is already off the site
       return deleteFile(entry.src).catch(function(){});
+    });
+  }
+
+  // ================= POEMS =================
+
+  var editingPoemKey = null; // null while adding a new poem
+
+  function parsePoems(html){
+    var doc = new DOMParser().parseFromString(html, 'text/html');
+    return Array.prototype.slice.call(doc.querySelectorAll('#poemList .poem')).map(function(el){
+      var h3 = el.querySelector('.poem-head h3');
+      var dateEl = el.querySelector('.poem-date');
+      var textEl = el.querySelector('.poem-text');
+      var lines = (textEl ? textEl.textContent : '').split('\n').map(function(l){ return l.trim(); });
+      while (lines.length && !lines[0]) lines.shift();
+      while (lines.length && !lines[lines.length - 1]) lines.pop();
+      return {
+        title: h3 ? h3.textContent.trim() : '',
+        date: dateEl ? dateEl.textContent.trim() : '',
+        text: lines.join('\n')
+      };
+    });
+  }
+
+  function buildPoemEl(doc, data){
+    var div = doc.createElement('div'); div.className = 'poem';
+    var head = doc.createElement('div'); head.className = 'poem-head';
+    var h3 = doc.createElement('h3'); h3.textContent = data.title;
+    var span = doc.createElement('span'); span.className = 'poem-date mono'; span.textContent = data.date;
+    head.appendChild(h3); head.appendChild(span);
+    var textDiv = doc.createElement('div'); textDiv.className = 'poem-text'; textDiv.textContent = data.text;
+    div.appendChild(head); div.appendChild(textDiv);
+    return div;
+  }
+
+  function findPoemEl(doc, key){
+    var list = doc.getElementById('poemList');
+    if (!list) return null;
+    var items = Array.prototype.slice.call(list.querySelectorAll('.poem'));
+    return items.find(function(el){
+      var h3 = el.querySelector('.poem-head h3');
+      var d = el.querySelector('.poem-date');
+      return keyOf(h3 ? h3.textContent.trim() : '', d ? d.textContent.trim() : '') === key;
+    }) || null;
+  }
+
+  function loadPoems(){
+    poemsLoaded = true;
+    setStatus($('poemListStatus'), 'Loading…');
+    getPage('poetry.html').then(function(p){
+      renderPoemList(parsePoems(p.text));
+    }).catch(function(err){
+      if (err.status === 401){ $('disconnectBtn').click(); setStatus($('connectStatus'), 'Your token expired. Connect again.', 'err'); return; }
+      setStatus($('poemListStatus'), 'Couldn’t load poems: ' + err.message, 'err');
+    });
+  }
+
+  function renderPoemList(entries){
+    var box = $('poemItems');
+    box.innerHTML = '';
+    setStatus($('poemListStatus'), entries.length ? '' : 'No poems yet.');
+    entries.forEach(function(entry){
+      var row = document.createElement('div'); row.className = 'entry-row';
+      var meta = document.createElement('div'); meta.className = 'meta';
+      var h4 = document.createElement('h4'); h4.textContent = entry.title || '(untitled)';
+      var d = document.createElement('div'); d.className = 'd'; d.textContent = entry.date;
+      var snip = document.createElement('div'); snip.className = 'snip';
+      snip.textContent = entry.text.split('\n')[0].slice(0, 90);
+      meta.appendChild(h4); meta.appendChild(d); meta.appendChild(snip);
+
+      var actions = document.createElement('div'); actions.className = 'actions';
+      var editBtn = document.createElement('button');
+      editBtn.className = 'admin-btn ghost small'; editBtn.type = 'button'; editBtn.textContent = 'Edit';
+      editBtn.addEventListener('click', function(){ openEditPoem(entry); });
+      var delBtn = document.createElement('button');
+      delBtn.className = 'admin-btn ghost small'; delBtn.type = 'button'; delBtn.textContent = 'Delete';
+      delBtn.addEventListener('click', function(){ deletePoem(entry, delBtn); });
+      actions.appendChild(editBtn); actions.appendChild(delBtn);
+
+      row.appendChild(meta); row.appendChild(actions);
+      box.appendChild(row);
+    });
+  }
+
+  function openEditPoem(entry){
+    editingPoemKey = keyOf(entry.title, entry.date);
+    $('poemFormTitle').textContent = 'Edit poem';
+    $('poemTitle').value = entry.title;
+    $('poemDate').value = toISO(entry.date);
+    $('poemText').value = entry.text;
+    $('poemSaveBtn').textContent = 'Save changes';
+    $('poemCancelBtn').hidden = false;
+    setStatus($('poemFormStatus'), '');
+    $('poemFormTitle').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function resetPoemForm(){
+    editingPoemKey = null;
+    $('poemFormTitle').textContent = 'Add a poem';
+    $('poemTitle').value = '';
+    $('poemDate').value = '';
+    $('poemText').value = '';
+    $('poemSaveBtn').textContent = 'Publish poem';
+    $('poemCancelBtn').hidden = true;
+  }
+  $('poemCancelBtn').addEventListener('click', resetPoemForm);
+
+  $('poemSaveBtn').addEventListener('click', function(){
+    var title = $('poemTitle').value.trim();
+    var dateVal = $('poemDate').value;
+    var text = $('poemText').value.replace(/\r\n/g, '\n').trim();
+    if (!title || !dateVal || !text){
+      return setStatus($('poemFormStatus'), 'Fill in a title, date and the poem text.', 'err');
+    }
+    var date = fromISO(dateVal);
+    var key = editingPoemKey;
+    var data = { title: title, date: date, text: text };
+
+    $('poemSaveBtn').disabled = true;
+    setStatus($('poemFormStatus'), 'Saving…');
+
+    mutatePage('poetry.html', function(doc){
+      var list = doc.getElementById('poemList');
+      if (!list) return false;
+      var newEl = buildPoemEl(doc, data);
+      if (key){
+        var match = findPoemEl(doc, key);
+        if (!match) return false;
+        match.replaceWith(newEl);
+      } else {
+        list.insertBefore(newEl, list.firstChild); // newest addition at the top
+      }
+      return true;
+    }, (key ? 'Edit poem: ' : 'Add poem: ') + title).then(function(){
+      setStatus($('poemFormStatus'), (LOCAL ? 'Saved! Refresh Poetry to see it.' : 'Published! It will show on the site in about a minute.'), 'ok');
+      resetPoemForm();
+      loadPoems();
+    }).catch(function(err){
+      $('poemSaveBtn').disabled = false;
+      if (err.status === 401){ $('disconnectBtn').click(); setStatus($('connectStatus'), 'Your token expired. Connect again.', 'err'); return; }
+      setStatus($('poemFormStatus'), 'Something went wrong: ' + err.message, 'err');
+    });
+  });
+
+  function deletePoem(entry, btn){
+    if (!window.confirm('Delete "' + (entry.title || '(untitled)') + '"? This can’t be undone.')) return;
+    btn.disabled = true;
+    var key = keyOf(entry.title, entry.date);
+    mutatePage('poetry.html', function(doc){
+      var match = findPoemEl(doc, key);
+      if (!match) return false;
+      match.remove();
+      return true;
+    }, 'Delete poem: ' + entry.title).then(function(){
+      if (editingPoemKey === key) resetPoemForm();
+      loadPoems();
+    }).catch(function(err){
+      btn.disabled = false;
+      setStatus($('poemListStatus'), 'Couldn’t delete: ' + err.message, 'err');
+    });
+  }
+
+  // ================= ESSAYS =================
+
+  var editingEssayKey = null;
+
+  function parseEssays(html){
+    var doc = new DOMParser().parseFromString(html, 'text/html');
+    return Array.prototype.slice.call(doc.querySelectorAll('#essayList .essay')).map(function(el){
+      var h3 = el.querySelector('h3');
+      var dateEl = el.querySelector('.entry-date');
+      var paras = Array.prototype.slice.call(el.querySelectorAll('.essay-text p')).map(function(p){
+        return p.textContent.trim();
+      }).filter(Boolean);
+      return {
+        title: h3 ? h3.textContent.trim() : '',
+        date: dateEl ? dateEl.textContent.trim() : '',
+        text: paras.join('\n\n')
+      };
+    });
+  }
+
+  function buildEssayEl(doc, data){
+    var div = doc.createElement('div'); div.className = 'essay';
+    var h3 = doc.createElement('h3'); h3.textContent = data.title;
+    var textDiv = doc.createElement('div'); textDiv.className = 'essay-text';
+    data.paragraphs.forEach(function(para){
+      var p = doc.createElement('p'); p.textContent = para; textDiv.appendChild(p);
+    });
+    var span = doc.createElement('span'); span.className = 'entry-date'; span.textContent = data.date;
+    div.appendChild(h3); div.appendChild(textDiv); div.appendChild(span);
+    return div;
+  }
+
+  function findEssayEl(doc, key){
+    var list = doc.getElementById('essayList');
+    if (!list) return null;
+    var items = Array.prototype.slice.call(list.querySelectorAll('.essay'));
+    return items.find(function(el){
+      var h3 = el.querySelector('h3');
+      var d = el.querySelector('.entry-date');
+      return keyOf(h3 ? h3.textContent.trim() : '', d ? d.textContent.trim() : '') === key;
+    }) || null;
+  }
+
+  function loadEssays(){
+    essaysLoaded = true;
+    setStatus($('essayListStatus'), 'Loading…');
+    getPage('essays.html').then(function(p){
+      renderEssayList(parseEssays(p.text));
+    }).catch(function(err){
+      if (err.status === 401){ $('disconnectBtn').click(); setStatus($('connectStatus'), 'Your token expired. Connect again.', 'err'); return; }
+      setStatus($('essayListStatus'), 'Couldn’t load essays: ' + err.message, 'err');
+    });
+  }
+
+  function renderEssayList(entries){
+    var box = $('essayItems');
+    box.innerHTML = '';
+    setStatus($('essayListStatus'), entries.length ? '' : 'No essays yet.');
+    entries.forEach(function(entry){
+      var row = document.createElement('div'); row.className = 'entry-row';
+      var meta = document.createElement('div'); meta.className = 'meta';
+      var h4 = document.createElement('h4'); h4.textContent = entry.title || '(untitled)';
+      var d = document.createElement('div'); d.className = 'd'; d.textContent = entry.date;
+      var snip = document.createElement('div'); snip.className = 'snip';
+      snip.textContent = entry.text.split('\n\n')[0].slice(0, 140);
+      meta.appendChild(h4); meta.appendChild(d); meta.appendChild(snip);
+
+      var actions = document.createElement('div'); actions.className = 'actions';
+      var editBtn = document.createElement('button');
+      editBtn.className = 'admin-btn ghost small'; editBtn.type = 'button'; editBtn.textContent = 'Edit';
+      editBtn.addEventListener('click', function(){ openEditEssay(entry); });
+      var delBtn = document.createElement('button');
+      delBtn.className = 'admin-btn ghost small'; delBtn.type = 'button'; delBtn.textContent = 'Delete';
+      delBtn.addEventListener('click', function(){ deleteEssay(entry, delBtn); });
+      actions.appendChild(editBtn); actions.appendChild(delBtn);
+
+      row.appendChild(meta); row.appendChild(actions);
+      box.appendChild(row);
+    });
+  }
+
+  function openEditEssay(entry){
+    editingEssayKey = keyOf(entry.title, entry.date);
+    $('essayFormTitle').textContent = 'Edit essay';
+    $('essayTitle').value = entry.title;
+    $('essayDate').value = toISO(entry.date);
+    $('essayText').value = entry.text;
+    $('essaySaveBtn').textContent = 'Save changes';
+    $('essayCancelBtn').hidden = false;
+    setStatus($('essayFormStatus'), '');
+    $('essayFormTitle').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function resetEssayForm(){
+    editingEssayKey = null;
+    $('essayFormTitle').textContent = 'Add an essay';
+    $('essayTitle').value = '';
+    $('essayDate').value = '';
+    $('essayText').value = '';
+    $('essaySaveBtn').textContent = 'Publish essay';
+    $('essayCancelBtn').hidden = true;
+  }
+  $('essayCancelBtn').addEventListener('click', resetEssayForm);
+
+  $('essaySaveBtn').addEventListener('click', function(){
+    var title = $('essayTitle').value.trim();
+    var dateVal = $('essayDate').value;
+    var raw = $('essayText').value.replace(/\r\n/g, '\n').trim();
+    var paragraphs = raw.split(/\n\s*\n/).map(function(p){ return p.trim(); }).filter(Boolean);
+    if (!title || !dateVal || !paragraphs.length){
+      return setStatus($('essayFormStatus'), 'Fill in a title, date and at least one paragraph.', 'err');
+    }
+    var date = fromISO(dateVal);
+    var key = editingEssayKey;
+    var data = { title: title, date: date, paragraphs: paragraphs };
+
+    $('essaySaveBtn').disabled = true;
+    setStatus($('essayFormStatus'), 'Saving…');
+
+    mutatePage('essays.html', function(doc){
+      var list = doc.getElementById('essayList');
+      if (!list) return false;
+      var newEl = buildEssayEl(doc, data);
+      if (key){
+        var match = findEssayEl(doc, key);
+        if (!match) return false;
+        match.replaceWith(newEl);
+      } else {
+        list.insertBefore(newEl, list.firstChild);
+      }
+      return true;
+    }, (key ? 'Edit essay: ' : 'Add essay: ') + title).then(function(){
+      setStatus($('essayFormStatus'), (LOCAL ? 'Saved! Refresh Essays to see it.' : 'Published! It will show on the site in about a minute.'), 'ok');
+      resetEssayForm();
+      loadEssays();
+    }).catch(function(err){
+      $('essaySaveBtn').disabled = false;
+      if (err.status === 401){ $('disconnectBtn').click(); setStatus($('connectStatus'), 'Your token expired. Connect again.', 'err'); return; }
+      setStatus($('essayFormStatus'), 'Something went wrong: ' + err.message, 'err');
+    });
+  });
+
+  function deleteEssay(entry, btn){
+    if (!window.confirm('Delete "' + (entry.title || '(untitled)') + '"? This can’t be undone.')) return;
+    btn.disabled = true;
+    var key = keyOf(entry.title, entry.date);
+    mutatePage('essays.html', function(doc){
+      var match = findEssayEl(doc, key);
+      if (!match) return false;
+      match.remove();
+      return true;
+    }, 'Delete essay: ' + entry.title).then(function(){
+      if (editingEssayKey === key) resetEssayForm();
+      loadEssays();
+    }).catch(function(err){
+      btn.disabled = false;
+      setStatus($('essayListStatus'), 'Couldn’t delete: ' + err.message, 'err');
     });
   }
 
