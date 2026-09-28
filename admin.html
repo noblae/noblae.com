@@ -166,6 +166,7 @@
         <input class="admin-input" id="poemTitle" type="text" placeholder="Title">
         <input class="admin-input" id="poemDate" type="date">
         <textarea class="admin-input" id="poemText" rows="8" placeholder="Poem text. Each line break becomes a new line on the site."></textarea>
+        <p style="margin:-6px 0 12px;font-size:.72rem;">Wrap words in *asterisks* to make them italic, e.g. *this is italic*.</p>
         <div class="row">
           <button class="admin-btn" id="poemSaveBtn" type="button">Publish poem</button>
           <button class="admin-btn ghost" id="poemCancelBtn" type="button" hidden>Cancel edit</button>
@@ -628,13 +629,42 @@
 
   var editingPoemKey = null; // null while adding a new poem
 
+  // Reads a poem's rendered text back out as *asterisk* markup, so a poem
+  // with italics can be reopened for editing without losing the formatting.
+  function poemTextFromEl(el){
+    var parts = [];
+    Array.prototype.forEach.call(el ? el.childNodes : [], function(node){
+      if (node.nodeType === 3){ parts.push(node.textContent); }
+      else if (node.nodeType === 1 && node.tagName === 'EM'){ parts.push('*' + node.textContent + '*'); }
+      else { parts.push(node.textContent); }
+    });
+    return parts.join('');
+  }
+
+  // Turns *asterisk* markup back into real <em> elements (plus plain text
+  // nodes for everything else) when building the HTML to publish.
+  function poemTextToNodes(doc, text){
+    var frag = doc.createDocumentFragment();
+    var re = /\*([^*\n]+)\*/g;
+    var lastIndex = 0, m;
+    while ((m = re.exec(text)) !== null){
+      if (m.index > lastIndex) frag.appendChild(doc.createTextNode(text.slice(lastIndex, m.index)));
+      var em = doc.createElement('em');
+      em.textContent = m[1];
+      frag.appendChild(em);
+      lastIndex = re.lastIndex;
+    }
+    if (lastIndex < text.length) frag.appendChild(doc.createTextNode(text.slice(lastIndex)));
+    return frag;
+  }
+
   function parsePoems(html){
     var doc = new DOMParser().parseFromString(html, 'text/html');
     return Array.prototype.slice.call(doc.querySelectorAll('#poemList .poem')).map(function(el){
       var h3 = el.querySelector('.poem-head h3');
       var dateEl = el.querySelector('.poem-date');
       var textEl = el.querySelector('.poem-text');
-      var lines = (textEl ? textEl.textContent : '').split('\n').map(function(l){ return l.trim(); });
+      var lines = poemTextFromEl(textEl).split('\n').map(function(l){ return l.trim(); });
       while (lines.length && !lines[0]) lines.shift();
       while (lines.length && !lines[lines.length - 1]) lines.pop();
       return {
@@ -651,7 +681,8 @@
     var h3 = doc.createElement('h3'); h3.textContent = data.title;
     var span = doc.createElement('span'); span.className = 'poem-date mono'; span.textContent = data.date;
     head.appendChild(h3); head.appendChild(span);
-    var textDiv = doc.createElement('div'); textDiv.className = 'poem-text'; textDiv.textContent = data.text;
+    var textDiv = doc.createElement('div'); textDiv.className = 'poem-text';
+    textDiv.appendChild(poemTextToNodes(doc, data.text));
     div.appendChild(head); div.appendChild(textDiv);
     return div;
   }
