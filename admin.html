@@ -628,6 +628,7 @@
   // ================= POEMS =================
 
   var editingPoemKey = null; // null while adding a new poem
+  var poemEntries = []; // the list currently shown in "On the site now"
 
   // Reads a poem's rendered text back out as *asterisk* markup, so a poem
   // with italics can be reopened for editing without losing the formatting.
@@ -702,7 +703,8 @@
     poemsLoaded = true;
     setStatus($('poemListStatus'), 'Loading…');
     getPage('poetry.html').then(function(p){
-      renderPoemList(parsePoems(p.text));
+      poemEntries = parsePoems(p.text);
+      renderPoemList(poemEntries);
     }).catch(function(err){
       if (err.status === 401){ $('disconnectBtn').click(); setStatus($('connectStatus'), 'Your token expired. Connect again.', 'err'); return; }
       setStatus($('poemListStatus'), 'Couldn’t load poems: ' + err.message, 'err');
@@ -755,6 +757,7 @@
     $('poemDate').value = '';
     $('poemText').value = '';
     $('poemSaveBtn').textContent = 'Publish poem';
+    $('poemSaveBtn').disabled = false;
     $('poemCancelBtn').hidden = true;
   }
   $('poemCancelBtn').addEventListener('click', resetPoemForm);
@@ -787,8 +790,16 @@
       return true;
     }, (key ? 'Edit poem: ' : 'Add poem: ') + title).then(function(){
       setStatus($('poemFormStatus'), (LOCAL ? 'Saved! Refresh Poetry to see it.' : 'Published! It will show on the site in about a minute.'), 'ok');
+      // update the visible list directly instead of re-fetching from GitHub,
+      // since a read right after a write can briefly return the old content
+      if (key){
+        var idx = poemEntries.findIndex(function(e){ return keyOf(e.title, e.date) === key; });
+        if (idx !== -1) poemEntries[idx] = data; else poemEntries.unshift(data);
+      } else {
+        poemEntries.unshift(data);
+      }
+      renderPoemList(poemEntries);
       resetPoemForm();
-      loadPoems();
     }).catch(function(err){
       $('poemSaveBtn').disabled = false;
       if (err.status === 401){ $('disconnectBtn').click(); setStatus($('connectStatus'), 'Your token expired. Connect again.', 'err'); return; }
@@ -807,7 +818,8 @@
       return true;
     }, 'Delete poem: ' + entry.title).then(function(){
       if (editingPoemKey === key) resetPoemForm();
-      loadPoems();
+      poemEntries = poemEntries.filter(function(e){ return keyOf(e.title, e.date) !== key; });
+      renderPoemList(poemEntries);
     }).catch(function(err){
       btn.disabled = false;
       setStatus($('poemListStatus'), 'Couldn’t delete: ' + err.message, 'err');
@@ -817,6 +829,7 @@
   // ================= ESSAYS =================
 
   var editingEssayKey = null;
+  var essayEntries = []; // the list currently shown in "On the site now"
 
   function parseEssays(html){
     var doc = new DOMParser().parseFromString(html, 'text/html');
@@ -861,7 +874,8 @@
     essaysLoaded = true;
     setStatus($('essayListStatus'), 'Loading…');
     getPage('essays.html').then(function(p){
-      renderEssayList(parseEssays(p.text));
+      essayEntries = parseEssays(p.text);
+      renderEssayList(essayEntries);
     }).catch(function(err){
       if (err.status === 401){ $('disconnectBtn').click(); setStatus($('connectStatus'), 'Your token expired. Connect again.', 'err'); return; }
       setStatus($('essayListStatus'), 'Couldn’t load essays: ' + err.message, 'err');
@@ -914,6 +928,7 @@
     $('essayDate').value = '';
     $('essayText').value = '';
     $('essaySaveBtn').textContent = 'Publish essay';
+    $('essaySaveBtn').disabled = false;
     $('essayCancelBtn').hidden = true;
   }
   $('essayCancelBtn').addEventListener('click', resetEssayForm);
@@ -947,8 +962,17 @@
       return true;
     }, (key ? 'Edit essay: ' : 'Add essay: ') + title).then(function(){
       setStatus($('essayFormStatus'), (LOCAL ? 'Saved! Refresh Essays to see it.' : 'Published! It will show on the site in about a minute.'), 'ok');
+      // update the visible list directly instead of re-fetching from GitHub,
+      // since a read right after a write can briefly return the old content
+      var listEntry = { title: title, date: date, text: paragraphs.join('\n\n') };
+      if (key){
+        var idx = essayEntries.findIndex(function(e){ return keyOf(e.title, e.date) === key; });
+        if (idx !== -1) essayEntries[idx] = listEntry; else essayEntries.unshift(listEntry);
+      } else {
+        essayEntries.unshift(listEntry);
+      }
+      renderEssayList(essayEntries);
       resetEssayForm();
-      loadEssays();
     }).catch(function(err){
       $('essaySaveBtn').disabled = false;
       if (err.status === 401){ $('disconnectBtn').click(); setStatus($('connectStatus'), 'Your token expired. Connect again.', 'err'); return; }
@@ -967,7 +991,8 @@
       return true;
     }, 'Delete essay: ' + entry.title).then(function(){
       if (editingEssayKey === key) resetEssayForm();
-      loadEssays();
+      essayEntries = essayEntries.filter(function(e){ return keyOf(e.title, e.date) !== key; });
+      renderEssayList(essayEntries);
     }).catch(function(err){
       btn.disabled = false;
       setStatus($('essayListStatus'), 'Couldn’t delete: ' + err.message, 'err');
