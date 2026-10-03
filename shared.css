@@ -22,7 +22,13 @@
     --line:#f1e6d6;
     --hair:#4d2724;
     --pattern:url("images/pattern.jpg");
+    /* main text font. to try a different one, change this line and the
+       Google Fonts link near the top of each page's HTML file */
+    --serif:'Playfair Display', Georgia, 'Times New Roman', serif;
   }
+
+  /* anything hidden (e.g. entries on other pages) stays hidden */
+  [hidden]{display:none !important;}
 
   *{box-sizing:border-box;}
   body{
@@ -31,7 +37,7 @@
     background-repeat:repeat;
     background-size:220px auto;
     color:var(--bone);
-    font-family:'Cormorant', Georgia, 'Times New Roman', serif;
+    font-family:var(--serif);
     padding-inline:0;
     -webkit-font-smoothing:antialiased;
     position:relative;
@@ -318,17 +324,17 @@
     display:flex;justify-content:space-between;align-items:baseline;gap:16px;
   }
   .poem-head h3{
-    font-family:'Cormorant', serif;
+    font-family:var(--serif);
     font-weight:500;
-    font-size:1.4rem;
+    font-size:1.25rem;
     margin:0;
     color:var(--bone);
   }
   .poem-date{font-family:'IBM Plex Mono',monospace;font-size:.85rem;color:var(--bone-dim);}
   .poem-text{
     margin-top:16px;
-    line-height:2;
-    font-size:1.1rem;
+    line-height:1.9;
+    font-size:1rem;
     color:var(--bone-dim);
     white-space:pre-line;
     max-width:44ch;
@@ -343,18 +349,18 @@
   }
   .essay-list .essay:last-child{border-bottom:none;}
   .essay h3{
-    font-family:'Cormorant', serif;
+    font-family:var(--serif);
     font-weight:500;
-    font-size:1.4rem;
+    font-size:1.25rem;
     margin:0 0 10px;
     color:var(--bone);
   }
   .essay-text p{
-    font-family:'Cormorant', serif;
+    font-family:var(--serif);
     font-style:italic;
     font-weight:500;
-    font-size:1.3rem;
-    line-height:1.6;
+    font-size:1.1rem;
+    line-height:1.7;
     color:var(--bone);
     margin:0 0 .8em;
     max-width:62ch;
@@ -374,6 +380,63 @@
   .feed-item .essay{border-bottom:none;padding-bottom:0;}
   .feed-item .fight-card{margin-top:26px;}
   .feed-date{align-self:flex-end;margin-top:8px;}
+
+  .feed-image figure{margin:26px 0 0;}
+  .feed-image a{display:inline-block;max-width:100%;}
+  .feed-image img{
+    display:block;
+    max-width:min(100%, 560px);
+    max-height:70vh;
+    width:auto;height:auto;
+    border:1px solid var(--hair);
+  }
+  .feed-image figcaption{
+    margin-top:10px;
+    font-family:var(--serif);
+    font-style:italic;
+    font-size:1rem;
+    color:var(--bone-dim);
+  }
+
+  /* ---------- Pages (pager.js) ---------- */
+  .pager-bar{
+    display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;
+    margin:0 0 6px;
+    padding-bottom:12px;
+    border-bottom:1px solid var(--hair);
+    font-family:'IBM Plex Mono',monospace;
+    font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;
+    color:var(--bone-dim);
+    scroll-margin-top:90px;
+  }
+  .gallery-images + .pager-nav, .pager-bar + .gallery-images{margin-top:14px;}
+  .pager-size select{
+    font:inherit;letter-spacing:.06em;
+    color:var(--bone);
+    background:var(--void-2);
+    border:1px solid var(--hair);
+    padding:6px 8px;margin:0 6px;
+    cursor:pointer;
+  }
+  .pager-size select:focus{outline:1px solid var(--acid);outline-offset:1px;}
+  .pager-nav{
+    display:flex;justify-content:center;align-items:center;gap:6px;flex-wrap:wrap;
+    margin-top:30px;
+    font-family:'IBM Plex Mono',monospace;
+    font-size:.8rem;
+  }
+  .pager-nav button{
+    font:inherit;
+    min-width:36px;height:36px;padding:0 8px;
+    color:var(--bone-dim);
+    background:none;
+    border:1px solid var(--hair);
+    cursor:pointer;
+  }
+  .pager-nav button:hover:not(:disabled){color:var(--bone);border-color:var(--acid);}
+  .pager-nav button.current{color:var(--bone);background:var(--field-orange);border-color:var(--field-orange);}
+  .pager-nav button:disabled{opacity:.35;cursor:default;}
+  .pager-gap{color:var(--bone-dim);padding:0 4px;}
 
   /* ---------- Fights ---------- */
   .fight-grid{display:flex;flex-direction:column;gap:28px;}
@@ -448,7 +511,7 @@
   .art-card:hover .art-canvas.duo-b img{ animation:flashColorB .3s ease-out forwards; }
   .art-card:hover .art-canvas.duo-c img{ animation:flashColorC .3s ease-out forwards; }
   .art-cap{padding:12px 14px;}
-  .art-cap .t{font-style:italic;font-family:'Cormorant',serif;font-size:1.02rem;color:var(--bone);}
+  .art-cap .t{font-style:italic;font-family:var(--serif);font-size:1.02rem;color:var(--bone);}
   .art-cap .y{font-family:'IBM Plex Mono',monospace;font-size:.72rem;color:var(--bone-dim);}
 
   /* ---------- Purchase ---------- */
@@ -471,7 +534,7 @@
   }
   .shop-thumb svg{width:52%;height:52%;position:relative;z-index:2;color:var(--bone);}
   .shop-info{padding:14px 16px;display:flex;flex-direction:column;gap:4px;flex:1;}
-  .shop-info .name{font-family:'Cormorant',serif;font-weight:500;font-size:1.05rem;color:var(--bone);}
+  .shop-info .name{font-family:var(--serif);font-weight:500;font-size:1.05rem;color:var(--bone);}
   .shop-info .price{
     font-family:'IBM Plex Mono',monospace;
     font-size:.85rem;color:var(--acid);margin-top:auto;

@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Cormorant:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
 </head>
 <body>
@@ -36,8 +36,8 @@
       <h1 class="hero-title">Noblae</h1>
     </div>
 
-    <!-- newest poems, essays and fights, filled in automatically from
-         poetry.html, essays.html and fights.html (newest first) -->
+    <!-- newest poems, essays, fights and images, filled in automatically from
+         poetry.html, essays.html, fights.html and the Images page (newest first) -->
     <div class="feed" id="feed"></div>
   </section>
 
@@ -66,6 +66,8 @@
 </footer>
 
 <script src="shared.js"></script>
+<script src="gallery.js"></script>
+<script src="pager.js"></script>
 <script>
 (function(){
   "use strict";
@@ -121,12 +123,64 @@
     return { node: item, time: new Date(2000 + +m[3], +m[1] - 1, +m[2]).getTime() };
   }
 
-  Promise.all(SOURCES.map(load)).then(function(lists){
+  // ---------- images (same list as the Images page) ----------
+  var LOCAL = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+  var FOLDER_URL = (LOCAL ? '/__dev_api' : 'https://api.github.com') +
+                   '/repos/noblae/noblae.com/contents/images/gallery?ref=main';
+  function getJSON(url){
+    return fetch(url, { cache: 'no-store' })
+      .then(function(r){ return r.ok ? r.json() : []; })
+      .catch(function(){ return []; });
+  }
+  // an image's date: the one saved by the admin page, or else the
+  // YYYYMMDD at the start of its file name (e.g. 20260928-....jpg)
+  function imageTime(img){
+    var m = img.date && img.date.match(DATE_RE);
+    if (m) return { time: new Date(2000 + +m[3], +m[1] - 1, +m[2]).getTime(), label: m[0] };
+    var f = img.src.split('/').pop().match(/^(20\d{2})(\d{2})(\d{2})/);
+    if (f) return { time: new Date(+f[1], +f[2] - 1, +f[3]).getTime(), label: f[2] + '.' + f[3] + '.' + f[1].slice(2) };
+    return { time: 0, label: '' };   // no date: goes to the end of the feed
+  }
+  function loadImages(){
+    return Promise.all([getJSON('images.json?v=' + Date.now()), getJSON(FOLDER_URL)])
+      .then(function(r){ return window.NOBLAE_mergeImages(Array.isArray(r[0]) ? r[0] : [], Array.isArray(r[1]) ? r[1] : []); })
+      .then(function(images){
+        return images.map(function(img){
+          var when = imageTime(img);
+          var item = document.createElement('article');
+          item.className = 'feed-item feed-image';
+          var fig = document.createElement('figure');
+          var a = document.createElement('a');
+          a.href = img.src; a.target = '_blank'; a.rel = 'noopener';
+          var el = document.createElement('img');
+          el.src = img.src; el.alt = img.caption || ''; el.loading = 'lazy';
+          a.appendChild(el);
+          fig.appendChild(a);
+          if (img.caption){
+            var cap = document.createElement('figcaption');
+            cap.textContent = img.caption;
+            fig.appendChild(cap);
+          }
+          item.appendChild(fig);
+          if (when.label){
+            var date = document.createElement('span');
+            date.className = 'entry-date feed-date';
+            date.textContent = when.label;
+            item.appendChild(date);
+          }
+          return { node: item, time: when.time };
+        });
+      })
+      .catch(function(){ return []; });
+  }
+
+  Promise.all(SOURCES.map(load).concat([loadImages()])).then(function(lists){
     var entries = [].concat.apply([], lists);
     // newest first; entries on the same day keep their page order
     entries.forEach(function(e, i){ e.order = i; });
     entries.sort(function(a, b){ return (b.time - a.time) || (a.order - b.order); });
     entries.forEach(function(e){ feed.appendChild(e.node); });
+    window.NOBLAE_paginate(feed, '.feed-item');
   });
 
 })();

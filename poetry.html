@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
-<link href="https://fonts.googleapis.com/css2?family=Pirata+One&amp;family=Cormorant:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Pirata+One&amp;family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
 </head>
 <body>
@@ -36,7 +36,7 @@
     <!--to add a poem, copy a poem block below and change its title, date (MM.DD.YY), then its content.
     put the new poem block anywhere in the list; the home page sorts everything by date automatically.-->
 
-    <div class="poem-list" id="poemList"><div class="poem"><div class="poem-head"><h3>a memory</h3><span class="poem-date mono">10.02.26</span></div><div class="poem-text">so beautiful
+    <div class="poem-list" id="poemList" data-paginate=".poem" data-sort="date"><div class="poem"><div class="poem-head"><h3>a memory</h3><span class="poem-date mono">10.02.26</span></div><div class="poem-text">so beautiful
 and precious
 that if I hold it
 in my mind
@@ -304,6 +304,7 @@ suffocating</div></div>
 </footer>
 
 <script src="shared.js"></script>
+<script src="pager.js"></script>
 
 
 
