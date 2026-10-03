@@ -95,7 +95,7 @@
     font-weight:800;
     font-size:1.9rem;
     letter-spacing:.02em;
-    text-transform:uppercase;
+    text-transform:lowercase;
     line-height:.8;
     color:var(--bone);
     text-shadow: 2px 0 var(--field-orange), -2px 0 var(--field-violet);
@@ -193,10 +193,10 @@
   h1.hero-title{
     font-family:var(--title);
     font-weight:900;
-    font-size:clamp(3.6rem, 16vw, 9.5rem);
+    font-size:clamp(2.16rem, 9.6vw, 5.7rem);
     line-height:.78;
     letter-spacing:.01em;
-    text-transform:uppercase;
+    text-transform:lowercase;
     margin:0;
     color:var(--bone);
     text-shadow:
