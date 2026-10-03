@@ -1,7 +1,7 @@
 /* ============================================================
    NOBLAE — pages for long lists
    Splits a list (poems, essays, images, the home feed) into pages
-   and adds a "per page" box (10 / 25 / 100) above it and page
+   and adds a "per page" box (10 / 25 / 50 / 100) above it and page
    numbers below it. It only changes what's shown in the browser;
    the HTML files themselves stay exactly as they are, so adding
    entries (by hand or through admin.html) works the same as before.
@@ -16,7 +16,7 @@
 (function(){
   "use strict";
 
-  var OPTIONS = [10, 25, 100];
+  var OPTIONS = [10, 25, 50, 100];
   var DEFAULT = 10;
   var STORE_KEY = 'noblae-per-page';
   var DATE_RE = /(\d{2})\.(\d{2})\.(\d{2})/;

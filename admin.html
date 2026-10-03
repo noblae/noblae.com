@@ -7,13 +7,13 @@
 <meta name="robots" content="noindex, nofollow">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Pirata+One&family=Playfair+Display:wght@700;800;900&family=Cormorant:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500;1,600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="shared.css">
 <style>
   /* admin-only styles */
   [hidden]{display:none !important;}
   .admin-box{border:1px solid var(--hair);background:var(--card);padding:22px;margin-bottom:28px;}
-  .admin-box h3{font-family:var(--serif);font-weight:500;font-size:1.4rem;margin:0 0 12px;color:var(--bone);}
+  .admin-box h3{font-family:'Cormorant',serif;font-weight:500;font-size:1.4rem;margin:0 0 12px;color:var(--bone);}
   .admin-box p, .admin-box li{font-family:'IBM Plex Mono',monospace;font-size:.8rem;line-height:1.7;color:var(--bone-dim);}
   .admin-box ol{padding-left:20px;margin:0 0 16px;}
   .admin-box a{color:var(--bone);}
@@ -24,6 +24,15 @@
   }
   .admin-input:focus{outline:none;border-color:var(--acid);}
   textarea.admin-input{resize:vertical;min-height:140px;line-height:1.6;}
+  .fmt-bar{display:flex;gap:6px;margin:0 0 6px;}
+  .fmt-btn{
+    min-width:34px;height:32px;padding:0 8px;
+    font-family:'Cormorant',serif;font-size:1.05rem;line-height:1;
+    color:var(--bone);background:var(--void-2);
+    border:1px solid var(--hair);cursor:pointer;
+  }
+  .fmt-btn:hover{border-color:var(--acid);}
+  .fmt-help{margin:-6px 0 12px;font-size:.72rem !important;}
   .admin-btn{
     font-family:'IBM Plex Mono',monospace;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;
     border:1px solid var(--bone);background:var(--bone);color:var(--void);
@@ -78,7 +87,7 @@
     display:flex;justify-content:space-between;align-items:flex-start;gap:14px;flex-wrap:wrap;
   }
   .entry-row .meta{flex:1;min-width:220px;}
-  .entry-row .meta h4{margin:0 0 4px;font-family:var(--serif);font-weight:500;font-size:1.08rem;color:var(--bone);}
+  .entry-row .meta h4{margin:0 0 4px;font-family:'Cormorant',serif;font-weight:500;font-size:1.08rem;color:var(--bone);}
   .entry-row .meta .d{font-family:'IBM Plex Mono',monospace;font-size:.7rem;letter-spacing:.06em;color:var(--bone-dim);}
   .entry-row .meta .snip{font-family:'IBM Plex Mono',monospace;font-size:.75rem;line-height:1.5;color:var(--bone-dim);margin-top:8px;max-width:62ch;}
   .entry-row .actions{display:flex;gap:8px;flex-shrink:0;}
@@ -165,8 +174,14 @@
         <h3 id="poemFormTitle">Add a poem</h3>
         <input class="admin-input" id="poemTitle" type="text" placeholder="Title">
         <input class="admin-input" id="poemDate" type="date">
+        <div class="fmt-bar" data-for="poemText">
+          <button type="button" class="fmt-btn" data-mark="**" title="Bold (Cmd+B)"><strong>B</strong></button>
+          <button type="button" class="fmt-btn" data-mark="*" title="Italic (Cmd+I)"><em>I</em></button>
+          <button type="button" class="fmt-btn" data-mark="__" title="Underline (Cmd+U)"><u>U</u></button>
+          <button type="button" class="fmt-btn" data-mark="~~" title="Strikethrough"><s>S</s></button>
+        </div>
         <textarea class="admin-input" id="poemText" rows="8" placeholder="Poem text. Each line break becomes a new line on the site."></textarea>
-        <p style="margin:-6px 0 12px;font-size:.72rem;">Wrap words in *asterisks* to make them italic, e.g. *this is italic*.</p>
+        <p class="fmt-help">Select words and click a button (or press Cmd+B / Cmd+I / Cmd+U). In the text it shows as **bold**, *italic*, __underline__ and ~~strikethrough~~.</p>
         <div class="row">
           <button class="admin-btn" id="poemSaveBtn" type="button">Publish poem</button>
           <button class="admin-btn ghost" id="poemCancelBtn" type="button" hidden>Cancel edit</button>
@@ -190,7 +205,14 @@
         <h3 id="essayFormTitle">Add an essay</h3>
         <input class="admin-input" id="essayTitle" type="text" placeholder="Title">
         <input class="admin-input" id="essayDate" type="date">
+        <div class="fmt-bar" data-for="essayText">
+          <button type="button" class="fmt-btn" data-mark="**" title="Bold (Cmd+B)"><strong>B</strong></button>
+          <button type="button" class="fmt-btn" data-mark="*" title="Italic (Cmd+I)"><em>I</em></button>
+          <button type="button" class="fmt-btn" data-mark="__" title="Underline (Cmd+U)"><u>U</u></button>
+          <button type="button" class="fmt-btn" data-mark="~~" title="Strikethrough"><s>S</s></button>
+        </div>
         <textarea class="admin-input" id="essayText" rows="10" placeholder="Essay text. Leave a blank line between paragraphs."></textarea>
+        <p class="fmt-help">Select words and click a button (or press Cmd+B / Cmd+I / Cmd+U). In the text it shows as **bold**, *italic*, __underline__ and ~~strikethrough~~.</p>
         <div class="row">
           <button class="admin-btn" id="essaySaveBtn" type="button">Publish essay</button>
           <button class="admin-btn ghost" id="essayCancelBtn" type="button" hidden>Cancel edit</button>
@@ -630,34 +652,102 @@
   var editingPoemKey = null; // null while adding a new poem
   var poemEntries = []; // the list currently shown in "On the site now"
 
-  // Reads a poem's rendered text back out as *asterisk* markup, so a poem
-  // with italics can be reopened for editing without losing the formatting.
-  function poemTextFromEl(el){
+  // ---------- text formatting ----------
+  // In the admin text boxes formatting is written as **bold**, *italic*,
+  // __underline__ and ~~strikethrough~~. On the site it becomes real
+  // <strong>, <em>, <u> and <s> tags. These two functions convert both ways,
+  // so a formatted poem or essay can be reopened for editing without
+  // losing anything.
+  var MARKS = { '**': 'strong', '__': 'u', '~~': 's', '*': 'em' };
+  var TAG_MARK = { STRONG: '**', B: '**', U: '__', S: '~~', DEL: '~~', STRIKE: '~~', EM: '*', I: '*' };
+
+  // finds where an opening mark at `from` closes; a lone * never matches
+  // half of a ** pair
+  function findClose(text, mark, from){
+    var i = from;
+    while ((i = text.indexOf(mark, i)) !== -1){
+      if (mark === '*' && (text[i + 1] === '*' || text[i - 1] === '*')){
+        // skip a whole ** pair
+        i += (text[i + 1] === '*') ? 2 : 1;
+        continue;
+      }
+      return i;
+    }
+    return -1;
+  }
+
+  function markupToNodes(doc, text){
+    var frag = doc.createDocumentFragment();
+    var buf = '', i = 0;
+    function flush(){ if (buf){ frag.appendChild(doc.createTextNode(buf)); buf = ''; } }
+    while (i < text.length){
+      var mark = null;
+      if (text.substr(i, 2) === '**') mark = '**';
+      else if (text.substr(i, 2) === '__') mark = '__';
+      else if (text.substr(i, 2) === '~~') mark = '~~';
+      else if (text[i] === '*') mark = '*';
+      if (mark){
+        var close = findClose(text, mark, i + mark.length);
+        if (close > i + mark.length){
+          flush();
+          var el = doc.createElement(MARKS[mark]);
+          el.appendChild(markupToNodes(doc, text.slice(i + mark.length, close)));
+          frag.appendChild(el);
+          i = close + mark.length;
+          continue;
+        }
+        buf += mark; i += mark.length;
+        continue;
+      }
+      buf += text[i]; i++;
+    }
+    flush();
+    return frag;
+  }
+
+  function nodesToMarkup(el){
     var parts = [];
     Array.prototype.forEach.call(el ? el.childNodes : [], function(node){
-      if (node.nodeType === 3){ parts.push(node.textContent); }
-      else if (node.nodeType === 1 && node.tagName === 'EM'){ parts.push('*' + node.textContent + '*'); }
-      else { parts.push(node.textContent); }
+      if (node.nodeType === 3){ parts.push(node.textContent); return; }
+      if (node.nodeType !== 1) return;
+      if (node.tagName === 'BR'){ parts.push('\n'); return; }
+      var m = TAG_MARK[node.tagName];
+      var inner = nodesToMarkup(node);
+      parts.push(m ? m + inner + m : inner);
     });
     return parts.join('');
   }
 
-  // Turns *asterisk* markup back into real <em> elements (plus plain text
-  // nodes for everything else) when building the HTML to publish.
-  function poemTextToNodes(doc, text){
-    var frag = doc.createDocumentFragment();
-    var re = /\*([^*\n]+)\*/g;
-    var lastIndex = 0, m;
-    while ((m = re.exec(text)) !== null){
-      if (m.index > lastIndex) frag.appendChild(doc.createTextNode(text.slice(lastIndex, m.index)));
-      var em = doc.createElement('em');
-      em.textContent = m[1];
-      frag.appendChild(em);
-      lastIndex = re.lastIndex;
+  // formatting buttons + Cmd/Ctrl+B / I / U on the poem and essay boxes
+  function wrapSelection(ta, mark){
+    var start = ta.selectionStart, end = ta.selectionEnd, v = ta.value;
+    var sel = v.slice(start, end);
+    // already wrapped in this mark: unwrap it
+    if (v.slice(start - mark.length, start) === mark && v.slice(end, end + mark.length) === mark){
+      ta.value = v.slice(0, start - mark.length) + sel + v.slice(end + mark.length);
+      ta.setSelectionRange(start - mark.length, end - mark.length);
+    } else {
+      ta.value = v.slice(0, start) + mark + sel + mark + v.slice(end);
+      ta.setSelectionRange(start + mark.length, end + mark.length);
     }
-    if (lastIndex < text.length) frag.appendChild(doc.createTextNode(text.slice(lastIndex)));
-    return frag;
+    ta.focus();
   }
+  Array.prototype.forEach.call(document.querySelectorAll('.fmt-bar'), function(bar){
+    var ta = document.getElementById(bar.getAttribute('data-for'));
+    bar.addEventListener('mousedown', function(e){ e.preventDefault(); }); // keep the text selected
+    Array.prototype.forEach.call(bar.querySelectorAll('.fmt-btn'), function(btn){
+      btn.addEventListener('click', function(){ wrapSelection(ta, btn.getAttribute('data-mark')); });
+    });
+    ta.addEventListener('keydown', function(e){
+      if (!(e.metaKey || e.ctrlKey) || e.altKey) return;
+      var k = e.key.toLowerCase();
+      var mark = k === 'b' ? '**' : k === 'i' ? '*' : k === 'u' ? '__' : null;
+      if (mark){ e.preventDefault(); wrapSelection(ta, mark); }
+    });
+  });
+
+  function poemTextFromEl(el){ return nodesToMarkup(el); }
+  function poemTextToNodes(doc, text){ return markupToNodes(doc, text); }
 
   function parsePoems(html){
     var doc = new DOMParser().parseFromString(html, 'text/html');
@@ -837,7 +927,7 @@
       var h3 = el.querySelector('h3');
       var dateEl = el.querySelector('.entry-date');
       var paras = Array.prototype.slice.call(el.querySelectorAll('.essay-text p')).map(function(p){
-        return p.textContent.trim();
+        return nodesToMarkup(p).trim();
       }).filter(Boolean);
       return {
         title: h3 ? h3.textContent.trim() : '',
@@ -852,7 +942,7 @@
     var h3 = doc.createElement('h3'); h3.textContent = data.title;
     var textDiv = doc.createElement('div'); textDiv.className = 'essay-text';
     data.paragraphs.forEach(function(para){
-      var p = doc.createElement('p'); p.textContent = para; textDiv.appendChild(p);
+      var p = doc.createElement('p'); p.appendChild(markupToNodes(doc, para)); textDiv.appendChild(p);
     });
     var span = doc.createElement('span'); span.className = 'entry-date'; span.textContent = data.date;
     div.appendChild(h3); div.appendChild(textDiv); div.appendChild(span);

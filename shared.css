@@ -22,9 +22,12 @@
     --line:#f1e6d6;
     --hair:#4d2724;
     --pattern:url("images/pattern.jpg");
-    /* main text font. to try a different one, change this line and the
-       Google Fonts link near the top of each page's HTML file */
-    --serif:'Playfair Display', Georgia, 'Times New Roman', serif;
+    /* main text font */
+    --serif:'Cormorant', Georgia, 'Times New Roman', serif;
+    /* font for the NOBLAE name (top bar + home page title). to try a
+       different one, change this line and the Google Fonts link near the
+       top of each page's HTML file */
+    --title:'Playfair Display', Georgia, 'Times New Roman', serif;
   }
 
   /* anything hidden (e.g. entries on other pages) stays hidden */
@@ -88,7 +91,7 @@
     gap:16px;
   }
   .wordmark{
-    font-family:'Pirata One', 'Arial Narrow', cursive;
+    font-family:var(--title);
     font-weight:800;
     font-size:1.9rem;
     letter-spacing:.02em;
@@ -188,7 +191,7 @@
     pointer-events:none;
   }
   h1.hero-title{
-    font-family:'Pirata One', cursive;
+    font-family:var(--title);
     font-weight:900;
     font-size:clamp(3.6rem, 16vw, 9.5rem);
     line-height:.78;
@@ -326,15 +329,18 @@
   .poem-head h3{
     font-family:var(--serif);
     font-weight:500;
-    font-size:1.25rem;
+    font-size:1.4rem;
     margin:0;
     color:var(--bone);
   }
   .poem-date{font-family:'IBM Plex Mono',monospace;font-size:.85rem;color:var(--bone-dim);}
   .poem-text{
     margin-top:16px;
-    line-height:1.9;
-    font-size:1rem;
+    line-height:2;
+    font-size:1.1rem;
+    font-style:normal;
+    text-indent:0;
+    padding-left:0;
     color:var(--bone-dim);
     white-space:pre-line;
     max-width:44ch;
@@ -351,7 +357,7 @@
   .essay h3{
     font-family:var(--serif);
     font-weight:500;
-    font-size:1.25rem;
+    font-size:1.4rem;
     margin:0 0 10px;
     color:var(--bone);
   }
@@ -359,14 +365,21 @@
     font-family:var(--serif);
     font-style:italic;
     font-weight:500;
-    font-size:1.1rem;
-    line-height:1.7;
+    font-size:1.3rem;
+    line-height:1.6;
     color:var(--bone);
     margin:0 0 .8em;
     max-width:62ch;
   }
   .essay-text p:last-child{margin-bottom:0;}
   .essay .entry-date{align-self:flex-end;margin-top:10px;}
+
+  /* bold / italic / underline / strikethrough, added from the admin page */
+  .poem-text strong, .essay-text strong{font-weight:700;color:var(--bone);}
+  .poem-text em{font-style:italic;}
+  .essay-text em{font-style:normal;}  /* essays are already italic, so emphasis there turns upright */
+  .poem-text u, .essay-text u{text-decoration:underline;text-underline-offset:3px;text-decoration-thickness:1px;}
+  .poem-text s, .essay-text s{text-decoration:line-through;}
 
   /* ---------- Home feed ---------- */
   .feed{display:flex;flex-direction:column;}
