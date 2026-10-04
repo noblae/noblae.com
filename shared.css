@@ -113,10 +113,11 @@
     display:flex;
     flex-wrap:wrap;
     gap:4px 20px;
-    font-family:'IBM Plex Mono', monospace;
-    font-size:.72rem;
-    letter-spacing:.12em;
-    text-transform:uppercase;
+    font-family:var(--title);
+    font-weight:500;
+    font-size:.95rem;
+    letter-spacing:.04em;
+    text-transform:lowercase;
   }
   nav.links button, nav.links a{
     background:none;border:none;color:var(--bone-dim);
@@ -425,8 +426,8 @@
     margin:0 0 6px;
     padding-bottom:12px;
     border-bottom:1px solid var(--hair);
-    font-family:'IBM Plex Mono',monospace;
-    font-size:.72rem;letter-spacing:.12em;text-transform:uppercase;
+    font-family:var(--title);
+    font-size:.92rem;letter-spacing:.03em;text-transform:lowercase;
     color:var(--bone-dim);
     scroll-margin-top:90px;
   }
@@ -443,8 +444,8 @@
   .pager-nav{
     display:flex;justify-content:center;align-items:center;gap:6px;flex-wrap:wrap;
     margin-top:30px;
-    font-family:'IBM Plex Mono',monospace;
-    font-size:.8rem;
+    font-family:var(--title);
+    font-size:.9rem;
   }
   .pager-nav button{
     font:inherit;
