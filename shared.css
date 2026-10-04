@@ -35,15 +35,21 @@
 
   *{box-sizing:border-box;}
   body{
-    background-color:var(--void);
-    background-image:var(--pattern);
-    background-repeat:repeat;
-    background-size:220px auto;
+    background-color:#1f6fd6;
     color:var(--bone);
     font-family:var(--serif);
     padding-inline:0;
     -webkit-font-smoothing:antialiased;
     position:relative;
+  }
+  /* page background: sky photo filling the screen, staying still while
+     the page scrolls (a fixed layer, which also works on iPhones) */
+  body::after{
+    content:"";
+    position:fixed; inset:0;
+    z-index:-1;
+    pointer-events:none;
+    background:url("images/sky.jpg") center / cover no-repeat;
   }
   /* canvas grain */
   body::before{
