@@ -24,6 +24,7 @@
       -->
       <a href="essays.html">Essays</a>
       <a href="images.html">Images</a>
+      <a href="videos.html">Videos</a>
     </nav>
   </div>
 </header>
@@ -68,6 +69,7 @@
 <script src="shared.js"></script>
 <script src="gallery.js"></script>
 <script src="pager.js"></script>
+<script src="videos.js"></script>
 <script>
 (function(){
   "use strict";
@@ -174,7 +176,26 @@
       .catch(function(){ return []; });
   }
 
-  Promise.all(SOURCES.map(load).concat([loadImages()])).then(function(lists){
+  // ---------- videos (same list as the Videos page) ----------
+  function loadVideos(){
+    return window.NOBLAE_loadVideos().then(function(videos){
+      return videos.map(function(v){
+        var m = v.date && v.date.match(DATE_RE);
+        var item = document.createElement('article');
+        item.className = 'feed-item feed-video';
+        item.appendChild(window.NOBLAE_videoEl(v, { noDate: true }));
+        if (m){
+          var date = document.createElement('span');
+          date.className = 'entry-date feed-date';
+          date.textContent = m[0];
+          item.appendChild(date);
+        }
+        return { node: item, time: m ? new Date(2000 + +m[3], +m[1] - 1, +m[2]).getTime() : 0 };
+      });
+    }).catch(function(){ return []; });
+  }
+
+  Promise.all(SOURCES.map(load).concat([loadImages(), loadVideos()])).then(function(lists){
     var entries = [].concat.apply([], lists);
     // newest first; entries on the same day keep their page order
     entries.forEach(function(e, i){ e.order = i; });

@@ -133,11 +133,12 @@
       <p class="status" id="connectStatus"></p>
     </div>
 
-    <!-- tab bar: switches between the three content types -->
+    <!-- tab bar: switches between the content types -->
     <div class="admin-tabs" id="tabs" hidden>
       <button type="button" class="tab-btn active" data-tab="images">Images</button>
       <button type="button" class="tab-btn" data-tab="poems">Poems</button>
       <button type="button" class="tab-btn" data-tab="essays">Essays</button>
+      <button type="button" class="tab-btn" data-tab="videos">Videos</button>
     </div>
 
     <!-- ================= IMAGES ================= -->
@@ -229,10 +230,36 @@
 
     </div>
 
+    <!-- ================= VIDEOS ================= -->
+    <div id="panel-videos" hidden>
+
+      <div class="admin-box">
+        <h3 id="videoFormTitle">Add a video</h3>
+        <input class="admin-input" id="videoUrl" type="url" placeholder="YouTube link, e.g. https://www.youtube.com/watch?v=...">
+        <input class="admin-input" id="videoTitle" type="text" placeholder="Title (optional)">
+        <input class="admin-input" id="videoDate" type="date">
+        <p class="fmt-help">Copy the link from YouTube's Share button (or the address bar) and paste it above. Shorts links work too.</p>
+        <div class="row">
+          <button class="admin-btn" id="videoSaveBtn" type="button">Publish video</button>
+          <button class="admin-btn ghost" id="videoCancelBtn" type="button" hidden>Cancel edit</button>
+        </div>
+        <p class="status" id="videoFormStatus"></p>
+      </div>
+
+      <div class="admin-box">
+        <h3>On the site now</h3>
+        <p>Edit changes a video's link, title or date. Delete removes it from the site (not from YouTube).</p>
+        <div id="videoItems"></div>
+        <p class="status" id="videoListStatus"></p>
+      </div>
+
+    </div>
+
   </section>
 </main>
 
 <script src="gallery.js"></script>
+<script src="videos.js"></script>
 <script>
 (function(){
   "use strict";
@@ -381,13 +408,14 @@
     $('tabs').hidden = !on;
     $('disconnectBtn').hidden = !on;
     if (on){
-      poemsLoaded = false; essaysLoaded = false;
+      poemsLoaded = false; essaysLoaded = false; videosLoaded = false;
       showTab('images');
       loadCurrent();
     } else {
       $('panel-images').hidden = true;
       $('panel-poems').hidden = true;
       $('panel-essays').hidden = true;
+      $('panel-videos').hidden = true;
     }
   }
 
@@ -421,14 +449,15 @@
 
   // ---------- tabs ----------
   var tabBtns = Array.prototype.slice.call(document.querySelectorAll('.tab-btn'));
-  var panels = { images: $('panel-images'), poems: $('panel-poems'), essays: $('panel-essays') };
-  var poemsLoaded = false, essaysLoaded = false;
+  var panels = { images: $('panel-images'), poems: $('panel-poems'), essays: $('panel-essays'), videos: $('panel-videos') };
+  var poemsLoaded = false, essaysLoaded = false, videosLoaded = false;
 
   function showTab(name){
     tabBtns.forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-tab') === name); });
     Object.keys(panels).forEach(function(k){ panels[k].hidden = (k !== name); });
     if (name === 'poems' && !poemsLoaded) loadPoems();
     if (name === 'essays' && !essaysLoaded) loadEssays();
+    if (name === 'videos' && !videosLoaded) loadVideoList();
   }
   tabBtns.forEach(function(b){
     b.addEventListener('click', function(){ showTab(b.getAttribute('data-tab')); });
@@ -1086,6 +1115,162 @@
     }).catch(function(err){
       btn.disabled = false;
       setStatus($('essayListStatus'), 'Couldn’t delete: ' + err.message, 'err');
+    });
+  }
+
+  // ================= VIDEOS =================
+  // Stored in videos.json as [{ id, title, date }], newest first.
+
+  var VIDEOS = 'videos.json';
+  var editingVideoKey = null;
+  var videoEntries = [];
+
+  function videoKey(v){ return v.id + '||' + v.date; }
+
+  function getVideos(){
+    return api('/contents/' + VIDEOS + '?ref=' + BRANCH, { allow404: true }).then(function(file){
+      if (!file) return { list: [], sha: null };
+      var list = [];
+      try { list = JSON.parse(b64ToText(file.content) || '[]'); } catch(e){}
+      return { list: Array.isArray(list) ? list : [], sha: file.sha };
+    });
+  }
+  // same safe pattern as the image list: re-read right before saving,
+  // retry once if it changed in the meantime
+  function updateVideos(change, message, retried){
+    return getVideos().then(function(m){
+      var list = change(m.list);
+      if (list === false) throw new Error('Could not find that video — the list may have changed. Refresh and try again.');
+      return api('/contents/' + VIDEOS, { method: 'PUT', body: {
+        message: message,
+        content: textToB64(JSON.stringify(list, null, 2) + '\n'),
+        branch: BRANCH,
+        sha: m.sha || undefined
+      }}).then(function(){ return list; });
+    }).catch(function(err){
+      if (!retried && (err.status === 409 || err.status === 422)) return updateVideos(change, message, true);
+      throw err;
+    });
+  }
+
+  function sortVideos(list){
+    function t(v){ var m = (v.date || '').match(/^(\d{2})\.(\d{2})\.(\d{2})$/); return m ? new Date(2000 + +m[3], +m[1] - 1, +m[2]).getTime() : 0; }
+    return list.slice().sort(function(a, b){ return t(b) - t(a); });
+  }
+
+  function loadVideoList(){
+    videosLoaded = true;
+    setStatus($('videoListStatus'), 'Loading…');
+    getVideos().then(function(m){
+      videoEntries = m.list;
+      renderVideoList(videoEntries);
+    }).catch(function(err){
+      if (err.status === 401){ $('disconnectBtn').click(); setStatus($('connectStatus'), 'Your token expired. Connect again.', 'err'); return; }
+      setStatus($('videoListStatus'), 'Couldn’t load videos: ' + err.message, 'err');
+    });
+  }
+
+  function renderVideoList(entries){
+    var box = $('videoItems');
+    box.innerHTML = '';
+    setStatus($('videoListStatus'), entries.length ? '' : 'No videos yet.');
+    entries.forEach(function(entry){
+      var row = document.createElement('div'); row.className = 'entry-row';
+      var thumb = document.createElement('img');
+      thumb.src = 'https://i.ytimg.com/vi/' + entry.id + '/mqdefault.jpg';
+      thumb.alt = ''; thumb.loading = 'lazy';
+      thumb.style.cssText = 'width:120px;aspect-ratio:16/9;object-fit:cover;border:1px solid var(--hair);flex-shrink:0;';
+      var meta = document.createElement('div'); meta.className = 'meta';
+      var h4 = document.createElement('h4'); h4.textContent = entry.title || '(untitled)';
+      var d = document.createElement('div'); d.className = 'd'; d.textContent = entry.date;
+      var snip = document.createElement('div'); snip.className = 'snip';
+      snip.textContent = 'youtu.be/' + entry.id;
+      meta.appendChild(h4); meta.appendChild(d); meta.appendChild(snip);
+
+      var actions = document.createElement('div'); actions.className = 'actions';
+      var editBtn = document.createElement('button');
+      editBtn.className = 'admin-btn ghost small'; editBtn.type = 'button'; editBtn.textContent = 'Edit';
+      editBtn.addEventListener('click', function(){ openEditVideo(entry); });
+      var delBtn = document.createElement('button');
+      delBtn.className = 'admin-btn ghost small'; delBtn.type = 'button'; delBtn.textContent = 'Delete';
+      delBtn.addEventListener('click', function(){ deleteVideo(entry, delBtn); });
+      actions.appendChild(editBtn); actions.appendChild(delBtn);
+
+      row.appendChild(thumb); row.appendChild(meta); row.appendChild(actions);
+      box.appendChild(row);
+    });
+  }
+
+  function openEditVideo(entry){
+    editingVideoKey = videoKey(entry);
+    $('videoFormTitle').textContent = 'Edit video';
+    $('videoUrl').value = 'https://www.youtube.com/watch?v=' + entry.id;
+    $('videoTitle').value = entry.title || '';
+    $('videoDate').value = toISO(entry.date || '');
+    $('videoSaveBtn').textContent = 'Save changes';
+    $('videoCancelBtn').hidden = false;
+    setStatus($('videoFormStatus'), '');
+    $('videoFormTitle').scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  function resetVideoForm(){
+    editingVideoKey = null;
+    $('videoFormTitle').textContent = 'Add a video';
+    $('videoUrl').value = '';
+    $('videoTitle').value = '';
+    $('videoDate').value = '';
+    $('videoSaveBtn').textContent = 'Publish video';
+    $('videoSaveBtn').disabled = false;
+    $('videoCancelBtn').hidden = true;
+  }
+  $('videoCancelBtn').addEventListener('click', resetVideoForm);
+
+  $('videoSaveBtn').addEventListener('click', function(){
+    var id = window.NOBLAE_youtubeId($('videoUrl').value);
+    var title = $('videoTitle').value.trim();
+    var dateVal = $('videoDate').value;
+    if (!id) return setStatus($('videoFormStatus'), 'That doesn’t look like a YouTube link. Copy it from YouTube’s Share button and try again.', 'err');
+    if (!dateVal) return setStatus($('videoFormStatus'), 'Pick a date.', 'err');
+    var data = { id: id, title: title, date: fromISO(dateVal) };
+    var key = editingVideoKey;
+
+    $('videoSaveBtn').disabled = true;
+    setStatus($('videoFormStatus'), 'Saving…');
+    updateVideos(function(list){
+      if (key){
+        var idx = list.findIndex(function(v){ return videoKey(v) === key; });
+        if (idx === -1) return false;
+        list[idx] = data;
+      } else {
+        list.unshift(data);
+      }
+      return sortVideos(list);
+    }, (key ? 'Edit video: ' : 'Add video: ') + (title || id)).then(function(list){
+      setStatus($('videoFormStatus'), (LOCAL ? 'Saved! Refresh Videos to see it.' : 'Published! It will show on the site in about a minute.'), 'ok');
+      videoEntries = list;
+      renderVideoList(videoEntries);
+      resetVideoForm();
+    }).catch(function(err){
+      $('videoSaveBtn').disabled = false;
+      if (err.status === 401){ $('disconnectBtn').click(); setStatus($('connectStatus'), 'Your token expired. Connect again.', 'err'); return; }
+      setStatus($('videoFormStatus'), 'Something went wrong: ' + err.message, 'err');
+    });
+  });
+
+  function deleteVideo(entry, btn){
+    if (!window.confirm('Remove "' + (entry.title || entry.id) + '" from the site?')) return;
+    btn.disabled = true;
+    var key = videoKey(entry);
+    updateVideos(function(list){
+      var next = list.filter(function(v){ return videoKey(v) !== key; });
+      return next.length === list.length ? false : next;
+    }, 'Delete video: ' + (entry.title || entry.id)).then(function(list){
+      if (editingVideoKey === key) resetVideoForm();
+      videoEntries = list;
+      renderVideoList(videoEntries);
+    }).catch(function(err){
+      btn.disabled = false;
+      setStatus($('videoListStatus'), 'Couldn’t delete: ' + err.message, 'err');
     });
   }
 

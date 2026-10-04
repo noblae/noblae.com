@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Noblae — Artwork</title>
+<title>Noblae — Videos</title>
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -19,71 +19,26 @@
       <a href="poetry.html">Poetry</a>
       <!-- hidden for now; uncomment to re-enable
       <a href="fights.html">Fights</a>
-      <a href="artwork.html" class="active">Artwork</a>
+      <a href="artwork.html">Artwork</a>
       <a href="purchase.html">Purchase</a>
       -->
       <a href="essays.html">Essays</a>
       <a href="images.html">Images</a>
-      <a href="videos.html">Videos</a>
+      <a href="videos.html" class="active">Videos</a>
     </nav>
   </div>
 </header>
 
 <main>
-  <section class="view active" id="artwork">
-    <div class="field-band field-orange">
-      <h2 class="section-title">Artwork</h2>
+  <section class="view active" id="videos">
+    <div class="field-band field-void">
+      <h2 class="section-title">Videos</h2>
     </div>
 
-    <!--to make a new art entry, copy an art block below.
-    replace <img class="ph" alt="..."> with <img src="your-image.jpg" alt="...">.
-    the image must be in the images folder. name and date can be set as well.-->
+    <!--no need to edit this file. videos are added through the private admin page
+    (admin.html, Videos tab) by pasting a YouTube link. they're stored in videos.json.-->
 
-    <div class="art-grid" id="artList">
-
-      <!--art block start-->
-      <div class="art-card">
-        <div class="art-canvas duo-a"><img class="ph" alt="Untitled" loading="lazy"></div>
-        <div class="art-cap"><div class="t">Untitled</div><div class="y">P. 2026</div></div>
-      </div>
-      <!--art block end-->
-
-      <div class="art-card">
-        <div class="art-canvas duo-b"><img class="ph" alt="Untitled" loading="lazy"></div>
-        <div class="art-cap"><div class="t">Untitled</div><div class="y">P. 2026</div></div>
-      </div>
-
-      <div class="art-card">
-        <div class="art-canvas duo-c"><img class="ph" alt="Untitled" loading="lazy"></div>
-        <div class="art-cap"><div class="t">Untitled</div><div class="y">P. 2026</div></div>
-      </div>
-
-      <div class="art-card">
-        <div class="art-canvas duo-a"><img class="ph" alt="Untitled" loading="lazy"></div>
-        <div class="art-cap"><div class="t">Untitled</div><div class="y">P. 2026</div></div>
-      </div>
-
-      <div class="art-card">
-        <div class="art-canvas duo-b"><img class="ph" alt="Untitled" loading="lazy"></div>
-        <div class="art-cap"><div class="t">Untitled</div><div class="y">P. 2026</div></div>
-      </div>
-
-      <div class="art-card">
-        <div class="art-canvas duo-c"><img class="ph" alt="Untitled" loading="lazy"></div>
-        <div class="art-cap"><div class="t">Untitled</div><div class="y">P. 2026</div></div>
-      </div>
-
-      <div class="art-card">
-        <div class="art-canvas duo-a"><img class="ph" alt="Untitled" loading="lazy"></div>
-        <div class="art-cap"><div class="t">Untitled</div><div class="y">P. 2026</div></div>
-      </div>
-
-      <div class="art-card">
-        <div class="art-canvas duo-b"><img class="ph" alt="Untitled" loading="lazy"></div>
-        <div class="art-cap"><div class="t">Untitled</div><div class="y">P. 2026</div></div>
-      </div>
-
-    </div>
+    <div class="video-list" id="videoList"></div>
   </section>
 </main>
 
@@ -110,5 +65,24 @@
 </footer>
 
 <script src="shared.js"></script>
+<script src="pager.js"></script>
+<script src="videos.js"></script>
+<script>
+(function(){
+  "use strict";
+  var list = document.getElementById('videoList');
+  NOBLAE_loadVideos().then(function(videos){
+    videos.forEach(function(v){ list.appendChild(NOBLAE_videoEl(v)); });
+    if (!videos.length){
+      var p = document.createElement('p');
+      p.className = 'gallery-intro';
+      p.textContent = 'No videos yet.';
+      list.appendChild(p);
+      return;
+    }
+    window.NOBLAE_paginate(list, '.video');
+  });
+})();
+</script>
 </body>
 </html>
