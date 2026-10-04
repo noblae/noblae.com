@@ -21,6 +21,7 @@
     --bone-dim:#caa89d;
     --line:#f1e6d6;
     --hair:#4d2724;
+    --page-pink:#ffb6dc;   /* pale hot pink page background around the column */
     --blush:#f6b2c5;   /* pale pink glow on the noblae name */
     --pattern:url("images/pattern.jpg");
     /* main text font */
@@ -36,17 +37,18 @@
 
   *{box-sizing:border-box;}
   body{
-    background-color:#6b5a8e;
+    background-color:var(--page-pink);
     color:var(--bone);
     font-family:var(--serif);
     padding-inline:0;
     -webkit-font-smoothing:antialiased;
     position:relative;
   }
-  /* page background: sky photo filling the screen, staying still while
-     the page scrolls (a fixed layer, which also works on iPhones) */
+  /* page background: plain pale hot pink (set by --page-pink above).
+     to bring back the sky photo instead, change "content:none" below to
+     content:"" */
   body::after{
-    content:"";
+    content:none;
     position:fixed; inset:0;
     z-index:-1;
     pointer-events:none;
