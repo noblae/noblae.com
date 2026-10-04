@@ -180,21 +180,27 @@
   }
 
   /* ---------- Home ---------- */
-  .home-hero{
+  /* the Poetry, Essays and Images title bars share the home banner's look */
+  .home-hero,
+  .field-band.field-void{
     position:relative;
     padding:56px 26px 46px;
     margin:0 -20px 40px;
     background-color:var(--field-orange);
+    background-image:none;
     overflow:hidden;
+    border-top:none;
     border-bottom:1px solid var(--hair);
   }
-  .home-hero::after{
+  .home-hero::after,
+  .field-band.field-void::after{
     content:"";
     position:absolute; inset:0;
     background:radial-gradient(ellipse at 75% 30%, rgba(58,24,48,.55), transparent 60%);
     pointer-events:none;
   }
-  h1.hero-title{
+  h1.hero-title,
+  .field-band h2.section-title{
     font-family:var(--title);
     font-weight:900;
     font-size:clamp(2.16rem, 9.6vw, 5.7rem);
@@ -346,7 +352,6 @@
     padding-left:0;
     color:var(--bone);
     white-space:pre-line;
-    max-width:44ch;
   }
 
   /* ---------- Essays ---------- */
