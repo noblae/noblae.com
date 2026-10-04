@@ -21,6 +21,7 @@
     --bone-dim:#caa89d;
     --line:#f1e6d6;
     --hair:#4d2724;
+    --blush:#f6b2c5;   /* pale pink glow on the noblae name */
     --pattern:url("images/pattern.jpg");
     /* main text font */
     --serif:'Cormorant', Georgia, 'Times New Roman', serif;
@@ -104,7 +105,7 @@
     text-transform:lowercase;
     line-height:.8;
     color:var(--bone);
-    text-shadow: 2px 0 var(--field-orange), -2px 0 var(--field-violet);
+    text-shadow: 2px 0 var(--blush), -2px 0 rgba(246,178,197,.6);
     text-decoration:none;
     cursor:pointer;
   }
@@ -184,9 +185,6 @@
     padding:56px 26px 46px;
     margin:0 -20px 40px;
     background-color:var(--field-orange);
-    background-image:linear-gradient(rgba(140,22,34,.55),rgba(140,22,34,.55)), var(--pattern);
-    background-repeat:no-repeat, repeat;
-    background-size:100% 100%, 190px auto;
     overflow:hidden;
     border-bottom:1px solid var(--hair);
   }
@@ -206,10 +204,10 @@
     margin:0;
     color:var(--bone);
     text-shadow:
-      3px 0 0 var(--field-violet),
-      -3px 0 0 var(--acid),
-      0 0 30px rgba(0,0,0,.75),
-      0 0 60px rgba(0,0,0,.55);
+      3px 0 0 var(--blush),
+      -3px 0 0 rgba(246,178,197,.6),
+      0 0 30px rgba(0,0,0,.45),
+      0 0 60px rgba(0,0,0,.3);
     position:relative;
     text-wrap:balance;
   }
