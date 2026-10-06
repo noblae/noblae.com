@@ -140,6 +140,7 @@
       <button type="button" class="tab-btn" data-tab="essays">Essays</button>
       <button type="button" class="tab-btn" data-tab="videos">Videos</button>
       <button type="button" class="tab-btn" data-tab="home">Home</button>
+      <button type="button" class="tab-btn" data-tab="about">About</button>
     </div>
 
     <!-- ================= IMAGES ================= -->
@@ -256,6 +257,27 @@
         <p>Edit changes a video's link, title or date. Delete removes it from the site (not from YouTube).</p>
         <div id="videoItems"></div>
         <p class="status" id="videoListStatus"></p>
+      </div>
+
+    </div>
+
+    <!-- ================= ABOUT ================= -->
+    <div id="panel-about" hidden>
+
+      <div class="admin-box">
+        <h3>About page</h3>
+        <p>This is the text on the About page, shown large on the red background. Leave a blank line between paragraphs.</p>
+        <div class="fmt-bar" data-for="aboutBody">
+          <button type="button" class="fmt-btn" data-mark="**" title="Bold (Cmd+B)"><strong>B</strong></button>
+          <button type="button" class="fmt-btn" data-mark="*" title="Italic (Cmd+I)"><em>I</em></button>
+          <button type="button" class="fmt-btn" data-mark="__" title="Underline (Cmd+U)"><u>U</u></button>
+          <button type="button" class="fmt-btn" data-mark="~~" title="Strikethrough"><s>S</s></button>
+        </div>
+        <textarea class="admin-input" id="aboutBody" rows="10" placeholder="Write about yourself here."></textarea>
+        <div class="row">
+          <button class="admin-btn" id="aboutSaveBtn" type="button" disabled>Save About page</button>
+        </div>
+        <p class="status" id="aboutStatus"></p>
       </div>
 
     </div>
@@ -526,6 +548,7 @@
     if (on){
       poemsLoaded = false; essaysLoaded = false; videosLoaded = false; homeLoaded = false;
       poemsFetched = false; essaysFetched = false; videosFetched = false; imagesFetched = false;
+      aboutLoaded = false;
       homeServer = null;
       showTab('images');
       loadCurrent();
@@ -535,6 +558,7 @@
       $('panel-essays').hidden = true;
       $('panel-videos').hidden = true;
       $('panel-home').hidden = true;
+      $('panel-about').hidden = true;
     }
   }
 
@@ -568,7 +592,7 @@
 
   // ---------- tabs ----------
   var tabBtns = Array.prototype.slice.call(document.querySelectorAll('.tab-btn'));
-  var panels = { images: $('panel-images'), poems: $('panel-poems'), essays: $('panel-essays'), videos: $('panel-videos'), home: $('panel-home') };
+  var panels = { images: $('panel-images'), poems: $('panel-poems'), essays: $('panel-essays'), videos: $('panel-videos'), home: $('panel-home'), about: $('panel-about') };
   var poemsLoaded = false, essaysLoaded = false, videosLoaded = false;
 
   function showTab(name){
@@ -578,6 +602,7 @@
     if (name === 'essays' && !essaysLoaded) loadEssays();
     if (name === 'videos' && !videosLoaded) loadVideoList();
     if (name === 'home' && !homeLoaded) loadHome();
+    if (name === 'about' && !aboutLoaded) loadAbout();
   }
   tabBtns.forEach(function(b){
     b.addEventListener('click', function(){ showTab(b.getAttribute('data-tab')); });
@@ -1677,6 +1702,65 @@
       renderHome();
       if (err.status === 401){ $('disconnectBtn').click(); setStatus($('connectStatus'), 'Your token expired. Connect again.', 'err'); return; }
       setStatus($('homeStatus'), 'Something went wrong: ' + err.message, 'err');
+    });
+  });
+
+  // ================= ABOUT =================
+  // The About page (about.html) is plain text on a red background. Its text
+  // lives in <div id="aboutText">, one <p> per paragraph.
+
+  var aboutLoaded = false;
+  var aboutBase = '';
+
+  $('aboutBody').addEventListener('input', function(){
+    $('aboutSaveBtn').disabled = ($('aboutBody').value === aboutBase);
+  });
+
+  function loadAbout(){
+    aboutLoaded = true;
+    setStatus($('aboutStatus'), 'Loading…');
+    getPage('about.html').then(function(p){
+      var doc = new DOMParser().parseFromString(p.text, 'text/html');
+      var box = doc.getElementById('aboutText');
+      var paras = Array.prototype.slice.call(box ? box.querySelectorAll('p') : []).map(function(el){
+        return nodesToMarkup(el).trim();
+      }).filter(Boolean);
+      aboutBase = paras.join('\n\n');
+      $('aboutBody').value = aboutBase;
+      $('aboutSaveBtn').disabled = true;
+      setStatus($('aboutStatus'), box ? '' : 'The About page has no text area yet, so saving won’t work.', box ? '' : 'err');
+    }).catch(function(err){
+      aboutLoaded = false;
+      if (err.status === 401){ $('disconnectBtn').click(); setStatus($('connectStatus'), 'Your token expired. Connect again.', 'err'); return; }
+      setStatus($('aboutStatus'), 'Couldn’t load the About page: ' + err.message, 'err');
+    });
+  }
+
+  $('aboutSaveBtn').addEventListener('click', function(){
+    var raw = $('aboutBody').value.replace(/\r\n/g, '\n').trim();
+    var paras = raw.split(/\n\s*\n/).map(function(t){ return t.trim(); }).filter(Boolean);
+    if (!paras.length) return setStatus($('aboutStatus'), 'The About page can’t be empty.', 'err');
+
+    $('aboutSaveBtn').disabled = true;
+    setStatus($('aboutStatus'), 'Saving…');
+    mutatePage('about.html', function(doc){
+      var box = doc.getElementById('aboutText');
+      if (!box) return false;
+      while (box.firstChild) box.removeChild(box.firstChild);
+      paras.forEach(function(t){
+        var p = doc.createElement('p');
+        p.appendChild(markupToNodes(doc, t));
+        box.appendChild(p);
+      });
+      return true;
+    }, 'Edit About page').then(function(){
+      aboutBase = paras.join('\n\n');
+      $('aboutBody').value = aboutBase;
+      setStatus($('aboutStatus'), LOCAL ? 'Saved! Refresh the About page to see it.' : 'Saved! It will show on the site in about a minute.', 'ok');
+    }).catch(function(err){
+      $('aboutSaveBtn').disabled = false;
+      if (err.status === 401){ $('disconnectBtn').click(); setStatus($('connectStatus'), 'Your token expired. Connect again.', 'err'); return; }
+      setStatus($('aboutStatus'), 'Something went wrong: ' + err.message, 'err');
     });
   });
 
