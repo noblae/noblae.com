@@ -139,6 +139,7 @@
       <button type="button" class="tab-btn" data-tab="poems">Poems</button>
       <button type="button" class="tab-btn" data-tab="essays">Essays</button>
       <button type="button" class="tab-btn" data-tab="videos">Videos</button>
+      <button type="button" class="tab-btn" data-tab="home">Home</button>
     </div>
 
     <!-- ================= IMAGES ================= -->
@@ -192,7 +193,11 @@
 
       <div class="admin-box">
         <h3>On the site now</h3>
-        <p>Edit changes a poem's title, date or text. Delete removes it from the site.</p>
+        <p>Edit changes a poem's title, date or text. Delete removes it from the site.
+        The Poetry page runs newest first: any save puts it in date order, or press the button to do only that.</p>
+        <div class="row" style="margin:0 0 14px;">
+          <button class="admin-btn ghost small" id="poemSortBtn" type="button">Put Poetry page in date order</button>
+        </div>
         <div id="poemItems"></div>
         <p class="status" id="poemListStatus"></p>
       </div>
@@ -251,6 +256,30 @@
         <p>Edit changes a video's link, title or date. Delete removes it from the site (not from YouTube).</p>
         <div id="videoItems"></div>
         <p class="status" id="videoListStatus"></p>
+      </div>
+
+    </div>
+
+    <!-- ================= HOME (curated order) ================= -->
+    <div id="panel-home" hidden>
+
+      <div class="admin-box">
+        <h3>On the home page now</h3>
+        <p>These poems, essays, images and videos appear on the home page, top to bottom, with no dates shown.
+        Use the arrows to reorder, then press Save. The Poetry page is separate and always stays in date order.
+        Once you save, new posts do <b>not</b> show on the home page until you add them here.</p>
+        <div id="homeItems"></div>
+        <div class="row" style="margin-top:16px;">
+          <button class="admin-btn" id="homeSaveBtn" type="button" disabled>Save home page</button>
+          <button class="admin-btn ghost" id="homeResetBtn" type="button" disabled>Undo changes</button>
+        </div>
+        <p class="status" id="homeStatus"></p>
+      </div>
+
+      <div class="admin-box">
+        <h3>Not on the home page</h3>
+        <p>Press Add to put a piece at the bottom of the home page, then move it where you want it.</p>
+        <div id="homeAvailable"></div>
       </div>
 
     </div>
@@ -402,13 +431,102 @@
   // find the right block even if new entries were added above it meanwhile
   function keyOf(title, date){ return title + '||' + date; }
 
+  // newest-first ordering (dates are MM.DD.YY); equal dates keep their order
+  function dateValue(mmddyy){
+    var m = /^(\d{2})\.(\d{2})\.(\d{2})$/.exec(mmddyy || '');
+    return m ? new Date(2000 + (+m[3]), (+m[1]) - 1, +m[2]).getTime() : 0;
+  }
+  function sortNewest(list){
+    return list.map(function(e, i){ return { e: e, i: i }; })
+      .sort(function(a, b){ return (dateValue(b.e.date) - dateValue(a.e.date)) || (a.i - b.i); })
+      .map(function(x){ return x.e; });
+  }
+
+  // ---------- home.json: which posts the home page shows, in order ----------
+  function getJSONFile(path){
+    return api('/contents/' + path + '?ref=' + BRANCH, { allow404: true }).then(function(file){
+      if (!file) return null;
+      var parsed = [];
+      try { parsed = JSON.parse(b64ToText(file.content) || '[]'); } catch(e){}
+      return { list: Array.isArray(parsed) ? parsed : [], sha: file.sha };
+    });
+  }
+  function writeJSONFile(path, list, sha, message){
+    return api('/contents/' + path, { method: 'PUT', body: {
+      message: message,
+      content: textToB64(JSON.stringify(list, null, 2) + '\n'),
+      branch: BRANCH,
+      sha: sha || undefined
+    }});
+  }
+
+  // Last known state of home.json. After each save we keep the new sha from
+  // GitHub's reply instead of re-reading, since a read right after a write
+  // can briefly return the old file.
+  var homeServer = null; // { exists, list, sha }
+  function loadHomeServer(){
+    if (homeServer) return Promise.resolve(homeServer);
+    return getJSONFile('home.json').then(function(f){
+      homeServer = f ? { exists: true, list: f.list, sha: f.sha } : { exists: false, list: null, sha: null };
+      return homeServer;
+    });
+  }
+  function writeHome(list, message, retried){
+    return loadHomeServer().then(function(hs){
+      return writeJSONFile('home.json', list, hs.sha, message);
+    }).then(function(res){
+      homeServer = { exists: true, list: list.slice(), sha: (res && res.content) ? res.content.sha : null };
+      return homeServer;
+    }).catch(function(err){
+      if (!retried && (err.status === 409 || err.status === 422)){
+        homeServer = null; // re-read the current sha, then try once more
+        return writeHome(list, message, true);
+      }
+      throw err;
+    });
+  }
+
+  // When a post is renamed, re-dated or deleted, keep its place on the home
+  // page. match(ref) finds the old entry; next is its replacement, or null to remove.
+  function syncHomeRef(match, next){
+    return loadHomeServer().then(function(hs){
+      if (!hs.exists || !hs.list) return null; // home page isn't curated yet
+      var changed = false, list = [];
+      hs.list.forEach(function(r){
+        if (match(r)){ changed = true; if (next) list.push(next); }
+        else list.push(r);
+      });
+      if (!changed) return null;
+      return writeHome(list, next ? 'Update home page reference' : 'Remove from home page');
+    });
+  }
+
+  // Keeps poetry.html itself in date order, newest first. Poems with the same
+  // date keep their order. The old "poem block" comment markers are dropped,
+  // since they no longer sit next to their poems once things are reordered.
+  function sortPoemEls(doc){
+    var list = doc.getElementById('poemList');
+    if (!list) return;
+    Array.prototype.slice.call(list.childNodes).forEach(function(n){
+      if (n.nodeType === 8 && /poem block (start|end)/i.test(n.nodeValue)) list.removeChild(n);
+    });
+    var items = Array.prototype.filter.call(list.children, function(c){ return c.classList.contains('poem'); });
+    items.map(function(el, i){
+      var d = el.querySelector('.poem-date');
+      return { el: el, i: i, t: dateValue(d ? d.textContent.trim() : '') };
+    }).sort(function(a, b){ return (b.t - a.t) || (a.i - b.i); })
+      .forEach(function(x){ list.appendChild(x.el); });
+  }
+
   // ---------- connect / log out ----------
   function showConnected(on){
     $('connectBox').hidden = on;
     $('tabs').hidden = !on;
     $('disconnectBtn').hidden = !on;
     if (on){
-      poemsLoaded = false; essaysLoaded = false; videosLoaded = false;
+      poemsLoaded = false; essaysLoaded = false; videosLoaded = false; homeLoaded = false;
+      poemsFetched = false; essaysFetched = false; videosFetched = false; imagesFetched = false;
+      homeServer = null;
       showTab('images');
       loadCurrent();
     } else {
@@ -416,6 +534,7 @@
       $('panel-poems').hidden = true;
       $('panel-essays').hidden = true;
       $('panel-videos').hidden = true;
+      $('panel-home').hidden = true;
     }
   }
 
@@ -449,7 +568,7 @@
 
   // ---------- tabs ----------
   var tabBtns = Array.prototype.slice.call(document.querySelectorAll('.tab-btn'));
-  var panels = { images: $('panel-images'), poems: $('panel-poems'), essays: $('panel-essays'), videos: $('panel-videos') };
+  var panels = { images: $('panel-images'), poems: $('panel-poems'), essays: $('panel-essays'), videos: $('panel-videos'), home: $('panel-home') };
   var poemsLoaded = false, essaysLoaded = false, videosLoaded = false;
 
   function showTab(name){
@@ -458,6 +577,7 @@
     if (name === 'poems' && !poemsLoaded) loadPoems();
     if (name === 'essays' && !essaysLoaded) loadEssays();
     if (name === 'videos' && !videosLoaded) loadVideoList();
+    if (name === 'home' && !homeLoaded) loadHome();
   }
   tabBtns.forEach(function(b){
     b.addEventListener('click', function(){ showTab(b.getAttribute('data-tab')); });
@@ -467,6 +587,8 @@
 
   // ---------- picking photos ----------
   var pending = [];   // { file, url, caption, el }
+  var imageEntries = [];   // every image on the site (images.json + the gallery folder)
+  var imagesFetched = false;
 
   function addFiles(files){
     Array.prototype.forEach.call(files, function(file){
@@ -615,7 +737,10 @@
   function loadCurrent(){
     setStatus($('currentStatus'), 'Loading…');
     Promise.all([getManifest(), api('/contents/' + FOLDER.replace(/\/$/, '') + '?ref=' + BRANCH, { allow404: true })]).then(function(r){
-      renderCurrent(window.NOBLAE_mergeImages(r[0].list, r[1]));
+      imageEntries = window.NOBLAE_mergeImages(r[0].list, r[1]);
+      imagesFetched = true;
+      homeLoaded = false;
+      renderCurrent(imageEntries);
     }).catch(function(err){
       if (err.status === 401){ $('disconnectBtn').click(); setStatus($('connectStatus'), 'Your token expired. Connect again.', 'err'); return; }
       setStatus($('currentStatus'), 'Couldn’t load images: ' + err.message, 'err');
@@ -644,6 +769,9 @@
         x.disabled = true;
         cap.textContent = 'removing…';
         removeImage(entry).then(function(){
+          syncHomeRef(function(r){ return r.type === 'image' && r.src === entry.src; }, null).catch(function(){
+            setStatus($('currentStatus'), 'Removed, but the home page list could not be updated. Check the Home tab.', 'err');
+          });
           loadCurrent();
           setStatus($('currentStatus'), (LOCAL ? 'Removed.' : 'Removed. The site updates in about a minute.'), 'ok');
         }).catch(function(err){
@@ -680,6 +808,16 @@
 
   var editingPoemKey = null; // null while adding a new poem
   var poemEntries = []; // the list currently shown in "On the site now"
+  var editingPoemRef = null; // title + date of the poem being edited (before changes)
+  var poemsFetched = false;
+  function fetchPoems(force){
+    if (poemsFetched && !force) return Promise.resolve(poemEntries);
+    return getPage('poetry.html').then(function(p){
+      poemEntries = parsePoems(p.text);
+      poemsFetched = true;
+      return poemEntries;
+    });
+  }
 
   // ---------- text formatting ----------
   // In the admin text boxes formatting is written as **bold**, *italic*,
@@ -821,8 +959,7 @@
   function loadPoems(){
     poemsLoaded = true;
     setStatus($('poemListStatus'), 'Loading…');
-    getPage('poetry.html').then(function(p){
-      poemEntries = parsePoems(p.text);
+    fetchPoems(true).then(function(){
       renderPoemList(poemEntries);
     }).catch(function(err){
       if (err.status === 401){ $('disconnectBtn').click(); setStatus($('connectStatus'), 'Your token expired. Connect again.', 'err'); return; }
@@ -834,7 +971,8 @@
     var box = $('poemItems');
     box.innerHTML = '';
     setStatus($('poemListStatus'), entries.length ? '' : 'No poems yet.');
-    entries.forEach(function(entry){
+    // same order as the public Poetry page: newest first
+    sortNewest(entries).forEach(function(entry){
       var row = document.createElement('div'); row.className = 'entry-row';
       var meta = document.createElement('div'); meta.className = 'meta';
       var h4 = document.createElement('h4'); h4.textContent = entry.title || '(untitled)';
@@ -859,6 +997,7 @@
 
   function openEditPoem(entry){
     editingPoemKey = keyOf(entry.title, entry.date);
+    editingPoemRef = { title: entry.title, date: entry.date };
     $('poemFormTitle').textContent = 'Edit poem';
     $('poemTitle').value = entry.title;
     $('poemDate').value = toISO(entry.date);
@@ -871,6 +1010,7 @@
 
   function resetPoemForm(){
     editingPoemKey = null;
+    editingPoemRef = null;
     $('poemFormTitle').textContent = 'Add a poem';
     $('poemTitle').value = '';
     $('poemDate').value = '';
@@ -890,6 +1030,7 @@
     }
     var date = fromISO(dateVal);
     var key = editingPoemKey;
+    var oldRef = editingPoemRef;
     var data = { title: title, date: date, text: text };
 
     $('poemSaveBtn').disabled = true;
@@ -906,9 +1047,12 @@
       } else {
         list.insertBefore(newEl, list.firstChild); // newest addition at the top
       }
+      sortPoemEls(doc); // keep the Poetry page in date order
       return true;
     }, (key ? 'Edit poem: ' : 'Add poem: ') + title).then(function(){
-      setStatus($('poemFormStatus'), (LOCAL ? 'Saved! Refresh Poetry to see it.' : 'Published! It will show on the site in about a minute.'), 'ok');
+      var doneMsg = LOCAL ? 'Saved! Refresh Poetry to see it.' : 'Published! It will show on the site in about a minute.';
+      if (!key) doneMsg += ' Use the Home tab to choose whether it appears on the home page.';
+      setStatus($('poemFormStatus'), doneMsg, 'ok');
       // update the visible list directly instead of re-fetching from GitHub,
       // since a read right after a write can briefly return the old content
       if (key){
@@ -919,11 +1063,35 @@
       }
       renderPoemList(poemEntries);
       resetPoemForm();
+      homeLoaded = false; // Home tab reloads next time it's opened
+      if (oldRef && (oldRef.title !== data.title || oldRef.date !== data.date)){
+        syncHomeRef(function(r){ return r.type === 'poem' && r.title === oldRef.title && r.date === oldRef.date; },
+                    { type: 'poem', title: data.title, date: data.date }).catch(function(){
+          setStatus($('poemFormStatus'), 'Saved, but the home page list could not be updated. Check the Home tab.', 'err');
+        });
+      }
     }).catch(function(err){
       $('poemSaveBtn').disabled = false;
       if (err.status === 401){ $('disconnectBtn').click(); setStatus($('connectStatus'), 'Your token expired. Connect again.', 'err'); return; }
       setStatus($('poemFormStatus'), 'Something went wrong: ' + err.message, 'err');
     });
+  });
+
+  $('poemSortBtn').addEventListener('click', function(){
+    var btn = $('poemSortBtn');
+    btn.disabled = true;
+    setStatus($('poemListStatus'), 'Sorting…');
+    mutatePage('poetry.html', function(doc){
+      if (!doc.getElementById('poemList')) return false;
+      sortPoemEls(doc);
+      return true;
+    }, 'Put poems in date order').then(function(){
+      renderPoemList(poemEntries);
+      setStatus($('poemListStatus'), 'Done. The Poetry page now runs newest first.', 'ok');
+    }).catch(function(err){
+      if (err.status === 401){ $('disconnectBtn').click(); setStatus($('connectStatus'), 'Your token expired. Connect again.', 'err'); return; }
+      setStatus($('poemListStatus'), 'Couldn’t sort: ' + err.message, 'err');
+    }).then(function(){ btn.disabled = false; });
   });
 
   function deletePoem(entry, btn){
@@ -934,11 +1102,16 @@
       var match = findPoemEl(doc, key);
       if (!match) return false;
       match.remove();
+      sortPoemEls(doc);
       return true;
     }, 'Delete poem: ' + entry.title).then(function(){
       if (editingPoemKey === key) resetPoemForm();
       poemEntries = poemEntries.filter(function(e){ return keyOf(e.title, e.date) !== key; });
       renderPoemList(poemEntries);
+      homeLoaded = false;
+      syncHomeRef(function(r){ return r.type === 'poem' && r.title === entry.title && r.date === entry.date; }, null).catch(function(){
+        setStatus($('poemListStatus'), 'Deleted, but the home page list could not be updated. Check the Home tab.', 'err');
+      });
     }).catch(function(err){
       btn.disabled = false;
       setStatus($('poemListStatus'), 'Couldn’t delete: ' + err.message, 'err');
@@ -949,6 +1122,16 @@
 
   var editingEssayKey = null;
   var essayEntries = []; // the list currently shown in "On the site now"
+  var editingEssayRef = null; // title + date of the essay being edited (before changes)
+  var essaysFetched = false;
+  function fetchEssays(force){
+    if (essaysFetched && !force) return Promise.resolve(essayEntries);
+    return getPage('essays.html').then(function(p){
+      essayEntries = parseEssays(p.text);
+      essaysFetched = true;
+      return essayEntries;
+    });
+  }
 
   function parseEssays(html){
     var doc = new DOMParser().parseFromString(html, 'text/html');
@@ -992,8 +1175,7 @@
   function loadEssays(){
     essaysLoaded = true;
     setStatus($('essayListStatus'), 'Loading…');
-    getPage('essays.html').then(function(p){
-      essayEntries = parseEssays(p.text);
+    fetchEssays(true).then(function(){
       renderEssayList(essayEntries);
     }).catch(function(err){
       if (err.status === 401){ $('disconnectBtn').click(); setStatus($('connectStatus'), 'Your token expired. Connect again.', 'err'); return; }
@@ -1030,6 +1212,7 @@
 
   function openEditEssay(entry){
     editingEssayKey = keyOf(entry.title, entry.date);
+    editingEssayRef = { title: entry.title, date: entry.date };
     $('essayFormTitle').textContent = 'Edit essay';
     $('essayTitle').value = entry.title;
     $('essayDate').value = toISO(entry.date);
@@ -1042,6 +1225,7 @@
 
   function resetEssayForm(){
     editingEssayKey = null;
+    editingEssayRef = null;
     $('essayFormTitle').textContent = 'Add an essay';
     $('essayTitle').value = '';
     $('essayDate').value = '';
@@ -1062,6 +1246,7 @@
     }
     var date = fromISO(dateVal);
     var key = editingEssayKey;
+    var oldRef = editingEssayRef;
     var data = { title: title, date: date, paragraphs: paragraphs };
 
     $('essaySaveBtn').disabled = true;
@@ -1080,7 +1265,9 @@
       }
       return true;
     }, (key ? 'Edit essay: ' : 'Add essay: ') + title).then(function(){
-      setStatus($('essayFormStatus'), (LOCAL ? 'Saved! Refresh Essays to see it.' : 'Published! It will show on the site in about a minute.'), 'ok');
+      var doneMsg = LOCAL ? 'Saved! Refresh Essays to see it.' : 'Published! It will show on the site in about a minute.';
+      if (!key) doneMsg += ' Use the Home tab to choose whether it appears on the home page.';
+      setStatus($('essayFormStatus'), doneMsg, 'ok');
       // update the visible list directly instead of re-fetching from GitHub,
       // since a read right after a write can briefly return the old content
       var listEntry = { title: title, date: date, text: paragraphs.join('\n\n') };
@@ -1092,6 +1279,13 @@
       }
       renderEssayList(essayEntries);
       resetEssayForm();
+      homeLoaded = false; // Home tab reloads next time it's opened
+      if (oldRef && (oldRef.title !== data.title || oldRef.date !== data.date)){
+        syncHomeRef(function(r){ return r.type === 'essay' && r.title === oldRef.title && r.date === oldRef.date; },
+                    { type: 'essay', title: data.title, date: data.date }).catch(function(){
+          setStatus($('essayFormStatus'), 'Saved, but the home page list could not be updated. Check the Home tab.', 'err');
+        });
+      }
     }).catch(function(err){
       $('essaySaveBtn').disabled = false;
       if (err.status === 401){ $('disconnectBtn').click(); setStatus($('connectStatus'), 'Your token expired. Connect again.', 'err'); return; }
@@ -1112,6 +1306,10 @@
       if (editingEssayKey === key) resetEssayForm();
       essayEntries = essayEntries.filter(function(e){ return keyOf(e.title, e.date) !== key; });
       renderEssayList(essayEntries);
+      homeLoaded = false;
+      syncHomeRef(function(r){ return r.type === 'essay' && r.title === entry.title && r.date === entry.date; }, null).catch(function(){
+        setStatus($('essayListStatus'), 'Deleted, but the home page list could not be updated. Check the Home tab.', 'err');
+      });
     }).catch(function(err){
       btn.disabled = false;
       setStatus($('essayListStatus'), 'Couldn’t delete: ' + err.message, 'err');
@@ -1124,6 +1322,12 @@
   var VIDEOS = 'videos.json';
   var editingVideoKey = null;
   var videoEntries = [];
+  var editingVideoRef = null; // id + date of the video being edited (before changes)
+  var videosFetched = false;
+  function fetchVideos(){
+    if (videosFetched) return Promise.resolve(videoEntries);
+    return getVideos().then(function(m){ videoEntries = m.list; videosFetched = true; return videoEntries; });
+  }
 
   function videoKey(v){ return v.id + '||' + v.date; }
 
@@ -1163,6 +1367,7 @@
     setStatus($('videoListStatus'), 'Loading…');
     getVideos().then(function(m){
       videoEntries = m.list;
+      videosFetched = true;
       renderVideoList(videoEntries);
     }).catch(function(err){
       if (err.status === 401){ $('disconnectBtn').click(); setStatus($('connectStatus'), 'Your token expired. Connect again.', 'err'); return; }
@@ -1203,6 +1408,7 @@
 
   function openEditVideo(entry){
     editingVideoKey = videoKey(entry);
+    editingVideoRef = { id: entry.id, date: entry.date };
     $('videoFormTitle').textContent = 'Edit video';
     $('videoUrl').value = 'https://www.youtube.com/watch?v=' + entry.id;
     $('videoTitle').value = entry.title || '';
@@ -1215,6 +1421,7 @@
 
   function resetVideoForm(){
     editingVideoKey = null;
+    editingVideoRef = null;
     $('videoFormTitle').textContent = 'Add a video';
     $('videoUrl').value = '';
     $('videoTitle').value = '';
@@ -1233,6 +1440,7 @@
     if (!dateVal) return setStatus($('videoFormStatus'), 'Pick a date.', 'err');
     var data = { id: id, title: title, date: fromISO(dateVal) };
     var key = editingVideoKey;
+    var oldRef = editingVideoRef;
 
     $('videoSaveBtn').disabled = true;
     setStatus($('videoFormStatus'), 'Saving…');
@@ -1248,8 +1456,16 @@
     }, (key ? 'Edit video: ' : 'Add video: ') + (title || id)).then(function(list){
       setStatus($('videoFormStatus'), (LOCAL ? 'Saved! Refresh Videos to see it.' : 'Published! It will show on the site in about a minute.'), 'ok');
       videoEntries = list;
+      videosFetched = true;
       renderVideoList(videoEntries);
       resetVideoForm();
+      homeLoaded = false; // Home tab reloads next time it's opened
+      if (oldRef && (oldRef.id !== data.id || oldRef.date !== data.date)){
+        syncHomeRef(function(r){ return r.type === 'video' && r.id === oldRef.id && r.date === oldRef.date; },
+                    { type: 'video', id: data.id, date: data.date }).catch(function(){
+          setStatus($('videoFormStatus'), 'Saved, but the home page list could not be updated. Check the Home tab.', 'err');
+        });
+      }
     }).catch(function(err){
       $('videoSaveBtn').disabled = false;
       if (err.status === 401){ $('disconnectBtn').click(); setStatus($('connectStatus'), 'Your token expired. Connect again.', 'err'); return; }
@@ -1267,12 +1483,202 @@
     }, 'Delete video: ' + (entry.title || entry.id)).then(function(list){
       if (editingVideoKey === key) resetVideoForm();
       videoEntries = list;
+      videosFetched = true;
       renderVideoList(videoEntries);
+      homeLoaded = false;
+      syncHomeRef(function(r){ return r.type === 'video' && r.id === entry.id && r.date === entry.date; }, null).catch(function(){
+        setStatus($('videoListStatus'), 'Deleted, but the home page list could not be updated. Check the Home tab.', 'err');
+      });
     }).catch(function(err){
       btn.disabled = false;
       setStatus($('videoListStatus'), 'Couldn’t delete: ' + err.message, 'err');
     });
   }
+
+  // ================= HOME (curated order) =================
+  // home.json lists the posts the home page shows, in order:
+  //   { type: 'poem' | 'essay', title, date }
+  //   { type: 'image', src }
+  //   { type: 'video', id, date }
+  // Dates are only used to find the right post; the home page never displays them.
+
+  var homeLoaded = false;
+  var homeAll = [];       // every post, newest first
+  var homeList = [];      // the working order shown under "On the home page now"
+  var homeBaseList = [];  // the last saved (or starting) order, for Undo
+  var homeBase = '[]';    // the same, as text, to spot unsaved changes
+
+  function homeKey(r){
+    if (r.type === 'image') return 'image|' + r.src;
+    if (r.type === 'video') return 'video|' + r.id + '||' + r.date;
+    return r.type + '|' + keyOf(r.title, r.date);
+  }
+  // what gets saved in home.json: just enough to find the post again
+  function homeSaveRef(r){
+    if (r.type === 'image') return { type: 'image', src: r.src };
+    if (r.type === 'video') return { type: 'video', id: r.id, date: r.date };
+    return { type: r.type, title: r.title, date: r.date };
+  }
+  function homeSnapshot(list){ return JSON.stringify(list.map(homeSaveRef)); }
+  function homeDirty(){ return homeSnapshot(homeList) !== homeBase; }
+
+  // an image's date: the one saved by the admin page, or else the YYYYMMDD
+  // at the start of its file name (same rule the home page uses)
+  function imageDate(img){
+    if (/^\d{2}\.\d{2}\.\d{2}$/.test(img.date || '')) return img.date;
+    var f = (img.src || '').split('/').pop().match(/^(20\d{2})(\d{2})(\d{2})/);
+    return f ? f[2] + '.' + f[3] + '.' + f[1].slice(2) : '';
+  }
+
+  function fetchImages(){
+    if (imagesFetched) return Promise.resolve(imageEntries);
+    return Promise.all([getManifest(), api('/contents/' + FOLDER.replace(/\/$/, '') + '?ref=' + BRANCH, { allow404: true })]).then(function(r){
+      imageEntries = window.NOBLAE_mergeImages(r[0].list, r[1]);
+      imagesFetched = true;
+      return imageEntries;
+    });
+  }
+
+  function buildHomeItems(poems, essays, images, videos){
+    var items = [];
+    poems.forEach(function(e){
+      items.push({ type: 'poem', title: e.title, date: e.date, label: e.title || '(untitled)' });
+    });
+    essays.forEach(function(e){
+      items.push({ type: 'essay', title: e.title, date: e.date, label: e.title || '(untitled)' });
+    });
+    images.forEach(function(e){
+      items.push({ type: 'image', src: e.src, date: imageDate(e),
+                   label: e.caption || e.src.split('/').pop(), thumb: RAW_BASE + e.src });
+    });
+    videos.forEach(function(e){
+      items.push({ type: 'video', id: e.id, date: e.date, label: e.title || e.id,
+                   thumb: 'https://i.ytimg.com/vi/' + e.id + '/mqdefault.jpg' });
+    });
+    return sortNewest(items);
+  }
+
+  function loadHome(){
+    homeLoaded = true;
+    setStatus($('homeStatus'), 'Loading…');
+    Promise.all([fetchPoems(), fetchEssays(), fetchImages(), fetchVideos(), loadHomeServer()]).then(function(r){
+      homeAll = buildHomeItems(r[0], r[1], r[2], r[3]);
+      var hs = r[4];
+      var byKey = {};
+      homeAll.forEach(function(e){ byKey[homeKey(e)] = e; });
+      if (hs.exists && hs.list){
+        // anything that's been deleted since is simply dropped from the list
+        homeList = hs.list.map(function(x){ return byKey[homeKey(x)]; }).filter(Boolean);
+        setStatus($('homeStatus'), '');
+      } else {
+        // never curated: the home page is currently showing everything, newest first
+        homeList = homeAll.slice();
+        setStatus($('homeStatus'), 'The home page isn’t curated yet, so it shows everything, newest first. Arrange it here and save to take control.');
+      }
+      homeBaseList = homeList.slice();
+      homeBase = homeSnapshot(homeList);
+      renderHome();
+    }).catch(function(err){
+      homeLoaded = false;
+      if (err.status === 401){ $('disconnectBtn').click(); setStatus($('connectStatus'), 'Your token expired. Connect again.', 'err'); return; }
+      setStatus($('homeStatus'), 'Couldn’t load the home page list: ' + err.message, 'err');
+    });
+  }
+
+  function homeButton(text, title, onClick, disabled){
+    var b = document.createElement('button');
+    b.className = 'admin-btn ghost small'; b.type = 'button';
+    b.textContent = text; b.title = title; b.disabled = !!disabled;
+    b.addEventListener('click', onClick);
+    return b;
+  }
+
+  function homeRow(item, position, buttons){
+    var row = document.createElement('div'); row.className = 'entry-row';
+    if (item.thumb){
+      var t = document.createElement('img');
+      t.src = item.thumb; t.alt = ''; t.loading = 'lazy';
+      t.style.cssText = 'width:84px;aspect-ratio:16/9;object-fit:cover;border:1px solid var(--hair);flex-shrink:0;';
+      row.appendChild(t);
+    }
+    var meta = document.createElement('div'); meta.className = 'meta';
+    var h4 = document.createElement('h4'); h4.textContent = item.label;
+    var d = document.createElement('div'); d.className = 'd';
+    d.textContent = (position ? '#' + position + ' · ' : '') + item.type + (item.date ? ' · ' + item.date : '');
+    meta.appendChild(h4); meta.appendChild(d);
+    var actions = document.createElement('div'); actions.className = 'actions';
+    buttons.forEach(function(b){ actions.appendChild(b); });
+    row.appendChild(meta); row.appendChild(actions);
+    return row;
+  }
+
+  function renderHome(){
+    var box = $('homeItems');
+    box.innerHTML = '';
+    var dirty = homeDirty();
+    $('homeSaveBtn').disabled = !dirty;
+    $('homeResetBtn').disabled = !dirty;
+
+    if (!homeList.length){
+      var none = document.createElement('p');
+      none.textContent = 'Nothing is on the home page. Add something from the list below.';
+      box.appendChild(none);
+    }
+    homeList.forEach(function(item, i){
+      box.appendChild(homeRow(item, i + 1, [
+        homeButton('↑', 'Move up', function(){
+          var t = homeList[i - 1]; homeList[i - 1] = homeList[i]; homeList[i] = t; renderHome();
+        }, i === 0),
+        homeButton('↓', 'Move down', function(){
+          var t = homeList[i + 1]; homeList[i + 1] = homeList[i]; homeList[i] = t; renderHome();
+        }, i === homeList.length - 1),
+        homeButton('Remove', 'Take off the home page', function(){
+          homeList.splice(i, 1); renderHome();
+        })
+      ]));
+    });
+
+    var avail = $('homeAvailable');
+    avail.innerHTML = '';
+    var onHome = {};
+    homeList.forEach(function(r){ onHome[homeKey(r)] = true; });
+    var rest = homeAll.filter(function(e){ return !onHome[homeKey(e)]; });
+    if (!rest.length){
+      var all = document.createElement('p');
+      all.textContent = 'Everything is already on the home page.';
+      avail.appendChild(all);
+    }
+    rest.forEach(function(item){
+      avail.appendChild(homeRow(item, 0, [
+        homeButton('Add', 'Add to the bottom of the home page', function(){
+          homeList.push(item); renderHome();
+        })
+      ]));
+    });
+  }
+
+  $('homeResetBtn').addEventListener('click', function(){
+    homeList = homeBaseList.slice();
+    renderHome();
+    setStatus($('homeStatus'), '');
+  });
+
+  $('homeSaveBtn').addEventListener('click', function(){
+    var list = homeList.map(homeSaveRef);
+    $('homeSaveBtn').disabled = true;
+    $('homeResetBtn').disabled = true;
+    setStatus($('homeStatus'), 'Saving…');
+    writeHome(list, 'Update home page order').then(function(){
+      homeBaseList = homeList.slice();
+      homeBase = homeSnapshot(homeList);
+      renderHome();
+      setStatus($('homeStatus'), LOCAL ? 'Saved! Refresh the home page to see it.' : 'Saved! The home page updates in about a minute.', 'ok');
+    }).catch(function(err){
+      renderHome();
+      if (err.status === 401){ $('disconnectBtn').click(); setStatus($('connectStatus'), 'Your token expired. Connect again.', 'err'); return; }
+      setStatus($('homeStatus'), 'Something went wrong: ' + err.message, 'err');
+    });
+  });
 
   showConnected(!!token);
 })();

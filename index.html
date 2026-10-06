@@ -75,8 +75,9 @@
   "use strict";
 
   // ---------- home feed ----------
-  // Pulls every entry from the Poetry, Essays and Fights pages, so new
-  // content only ever needs to be added on its own page.
+  // Curated: home.json (set from the Home tab of the admin page) lists which
+  // poems, essays, images and videos appear here, and in what order. Dates are
+  // never shown. Until home.json exists, everything shows, newest first.
   var SOURCES = [
     { url: 'poetry.html', selector: '.poem',       kind: 'poem'  },
     { url: 'essays.html', selector: '.essay',      kind: 'essay' },
@@ -85,6 +86,19 @@
   var DATE_RE = /(\d{2})\.(\d{2})\.(\d{2})/;
 
   var feed = document.getElementById('feed');
+
+  // the curated list, or null if home.json doesn't exist yet
+  function fetchCurated(){
+    return fetch('home.json?v=' + Date.now(), { cache: 'no-store' })
+      .then(function(r){ return r.ok ? r.json() : null; })
+      .catch(function(){ return null; });
+  }
+  // how a curated entry in home.json is matched to a post on the site
+  function refKey(r){
+    if (r.type === 'image') return 'image|' + r.src;
+    if (r.type === 'video') return 'video|' + r.id + '||' + r.date;
+    return r.type + '|' + r.title + '||' + r.date;
+  }
 
   function load(src){
     // cache-bust: without this, browsers (and GitHub's CDN) can serve a
@@ -101,13 +115,14 @@
       .catch(function(){ return []; });
   }
 
-  // Finds the entry's MM.DD.YY date, pulls it out of the entry, and
-  // returns the entry with the date placed at its bottom-right.
+  // Reads the entry's MM.DD.YY date (used for ordering and for matching it
+  // against home.json), then removes it so no date is shown on the home page.
   function entryFrom(el, kind){
     var dateEl = el.querySelector('.poem-date, .entry-date, .fight-meta .tag');
     var m = dateEl && dateEl.textContent.match(DATE_RE);
     if (!m) return null;
-    var label = m[0];
+    var titleEl = kind === 'fight' ? el.querySelector('.fight-meta span') : el.querySelector('h3');
+    var title = titleEl ? titleEl.textContent.trim() : '';
     if (dateEl.classList.contains('tag')){
       dateEl.textContent = dateEl.textContent.replace(DATE_RE, '').replace(/[\s\u00b7]+$/, '');
     } else {
@@ -117,12 +132,12 @@
     var item = document.createElement('article');
     item.className = 'feed-item feed-' + kind;
     item.appendChild(document.importNode(el, true));
-    var date = document.createElement('span');
-    date.className = 'entry-date feed-date';
-    date.textContent = label;
-    item.appendChild(date);
 
-    return { node: item, time: new Date(2000 + +m[3], +m[1] - 1, +m[2]).getTime() };
+    return {
+      node: item,
+      key: kind + '|' + title + '||' + m[0],
+      time: new Date(2000 + +m[3], +m[1] - 1, +m[2]).getTime()
+    };
   }
 
   // ---------- images (same list as the Images page) ----------
@@ -164,13 +179,7 @@
             fig.appendChild(cap);
           }
           item.appendChild(fig);
-          if (when.label){
-            var date = document.createElement('span');
-            date.className = 'entry-date feed-date';
-            date.textContent = when.label;
-            item.appendChild(date);
-          }
-          return { node: item, time: when.time };
+          return { node: item, key: 'image|' + img.src, time: when.time };
         });
       })
       .catch(function(){ return []; });
@@ -184,23 +193,29 @@
         var item = document.createElement('article');
         item.className = 'feed-item feed-video';
         item.appendChild(window.NOBLAE_videoEl(v, { noDate: true }));
-        if (m){
-          var date = document.createElement('span');
-          date.className = 'entry-date feed-date';
-          date.textContent = m[0];
-          item.appendChild(date);
-        }
-        return { node: item, time: m ? new Date(2000 + +m[3], +m[1] - 1, +m[2]).getTime() : 0 };
+        return { node: item, key: 'video|' + v.id + '||' + v.date, time: m ? new Date(2000 + +m[3], +m[1] - 1, +m[2]).getTime() : 0 };
       });
     }).catch(function(){ return []; });
   }
 
-  Promise.all(SOURCES.map(load).concat([loadImages(), loadVideos()])).then(function(lists){
-    var entries = [].concat.apply([], lists);
-    // newest first; entries on the same day keep their page order
-    entries.forEach(function(e, i){ e.order = i; });
-    entries.sort(function(a, b){ return (b.time - a.time) || (a.order - b.order); });
-    entries.forEach(function(e){ feed.appendChild(e.node); });
+  Promise.all([fetchCurated(), Promise.all(SOURCES.map(load).concat([loadImages(), loadVideos()]))]).then(function(res){
+    var curated = res[0];
+    var entries = [].concat.apply([], res[1]);
+    var shown;
+
+    if (Array.isArray(curated)){
+      // the curated list decides what shows and in what order
+      var byKey = {};
+      entries.forEach(function(e){ if (!byKey[e.key]) byKey[e.key] = e; });
+      shown = curated.map(function(r){ return byKey[refKey(r)]; }).filter(Boolean);
+    } else {
+      // not curated yet: everything, newest first; same-day entries keep their page order
+      entries.forEach(function(e, i){ e.order = i; });
+      entries.sort(function(a, b){ return (b.time - a.time) || (a.order - b.order); });
+      shown = entries;
+    }
+
+    shown.forEach(function(e){ feed.appendChild(e.node); });
     window.NOBLAE_paginate(feed, '.feed-item');
   });
 
