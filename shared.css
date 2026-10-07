@@ -375,7 +375,7 @@
   }
   .essay-text p{
     font-family:var(--serif);
-    font-style:italic;
+    font-style:normal;
     font-weight:500;
     font-size:1.3rem;
     line-height:1.6;
