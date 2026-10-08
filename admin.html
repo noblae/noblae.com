@@ -289,7 +289,7 @@
       <div class="admin-box">
         <h3>On the home page now</h3>
         <p>These poems, essays, images and videos appear on the home page, top to bottom, with no dates shown.
-        Use the arrows to nudge an item, or type a position number and press Move (or Enter) to send it straight there. Then press Save. The Poetry page is separate and always stays in date order.
+        Use the arrows to nudge an item, or type a position number and press Move (or Enter) to send it straight there. Changes save by themselves about a second after you stop. The Poetry page is separate and always stays in date order.
         Once you save, new posts do <b>not</b> show on the home page until you add them here.</p>
         <input class="admin-input" id="homeSearch" type="search" placeholder="Search by title (filters both lists; numbers stay the real positions)…" autocomplete="off" style="margin-bottom:14px;">
         <div id="homeItems"></div>
@@ -1681,6 +1681,7 @@
     var dirty = homeDirty();
     $('homeSaveBtn').disabled = !dirty;
     $('homeResetBtn').disabled = !dirty;
+    homeAutoSave(dirty);
 
     if (!homeList.length){
       var none = document.createElement('p');
@@ -1697,7 +1698,7 @@
           var moved = homeList.splice(i, 1)[0];
           homeList.splice(n - 1, 0, moved);
           renderHome();
-          setStatus($('homeStatus'), '“' + (moved.label || 'Item') + '” is now #' + n + '. Press Save to keep it.');
+          setStatus($('homeStatus'), '“' + (moved.label || 'Item') + '” is now #' + n + '. Saving automatically…');
         }),
         homeButton('↑', 'Move up', function(){
           var t = homeList[i - 1]; homeList[i - 1] = homeList[i]; homeList[i] = t; renderHome();
@@ -1734,7 +1735,7 @@
           n = Math.max(1, Math.min(homeList.length + 1, n));
           homeList.splice(n - 1, 0, item);
           renderHome();
-          setStatus($('homeStatus'), '“' + (item.label || 'Item') + '” added at #' + n + '. Press Save to keep it.');
+          setStatus($('homeStatus'), '“' + (item.label || 'Item') + '” added at #' + n + '. Saving automatically…');
         }),
         homeButton('Add', 'Add to the bottom of the home page', function(){
           homeList.push(item); renderHome();
@@ -1754,22 +1755,37 @@
     setStatus($('homeStatus'), '');
   });
 
-  $('homeSaveBtn').addEventListener('click', function(){
-    var list = homeList.map(homeSaveRef);
+  // Saves on its own about a second after the last change; the button still works too.
+  var homeTimer = null, homeSaving = false, homeFailedSnap = null;
+  function homeAutoSave(dirty){
+    clearTimeout(homeTimer);
+    if (!dirty || homeSaving || homeSnapshot(homeList) === homeFailedSnap) return;
+    setStatus($('homeStatus'), 'Saving automatically…');
+    homeTimer = setTimeout(homeSave, 1000);
+  }
+  function homeSave(){
+    if (homeSaving) return;
+    clearTimeout(homeTimer);
+    if (!homeDirty()) return;
+    homeSaving = true;
+    var sent = homeList.slice();
+    var snap = homeSnapshot(sent);
     $('homeSaveBtn').disabled = true;
     $('homeResetBtn').disabled = true;
     setStatus($('homeStatus'), 'Saving…');
-    writeHome(list, 'Update home page order').then(function(){
-      homeBaseList = homeList.slice();
-      homeBase = homeSnapshot(homeList);
+    writeHome(sent.map(homeSaveRef), 'Update home page order').then(function(){
+      homeSaving = false; homeFailedSnap = null;
+      homeBaseList = sent; homeBase = snap;
       renderHome();
-      setStatus($('homeStatus'), LOCAL ? 'Saved! Refresh the home page to see it.' : 'Saved! The home page updates in about a minute.', 'ok');
+      if (!homeDirty()) setStatus($('homeStatus'), LOCAL ? 'Saved! Refresh the home page to see it.' : 'Saved! The home page updates in about a minute.', 'ok');
     }).catch(function(err){
+      homeSaving = false; homeFailedSnap = snap;
       renderHome();
       if (err.status === 401){ $('disconnectBtn').click(); setStatus($('connectStatus'), 'Your token expired. Connect again.', 'err'); return; }
-      setStatus($('homeStatus'), 'Something went wrong: ' + err.message, 'err');
+      setStatus($('homeStatus'), 'Couldn’t save: ' + err.message + ' (make another change, or press Save, to try again)', 'err');
     });
-  });
+  }
+  $('homeSaveBtn').addEventListener('click', homeSave);
 
   // ================= ABOUT =================
   // The About page (about.html) is plain text on a red background. Its text
