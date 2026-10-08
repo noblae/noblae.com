@@ -199,6 +199,7 @@
         <div class="row" style="margin:0 0 14px;">
           <button class="admin-btn ghost small" id="poemSortBtn" type="button">Put Poetry page in date order</button>
         </div>
+        <input class="admin-input" id="poemSearch" type="search" placeholder="Search poems by title, date or words in the poem…" autocomplete="off" style="margin-bottom:14px;">
         <div id="poemItems"></div>
         <p class="status" id="poemListStatus"></p>
       </div>
@@ -288,8 +289,9 @@
       <div class="admin-box">
         <h3>On the home page now</h3>
         <p>These poems, essays, images and videos appear on the home page, top to bottom, with no dates shown.
-        Use the arrows to reorder, then press Save. The Poetry page is separate and always stays in date order.
+        Use the arrows to nudge an item, or type a position number and press Move (or Enter) to send it straight there. Then press Save. The Poetry page is separate and always stays in date order.
         Once you save, new posts do <b>not</b> show on the home page until you add them here.</p>
+        <input class="admin-input" id="homeSearch" type="search" placeholder="Search by title (filters both lists; numbers stay the real positions)…" autocomplete="off" style="margin-bottom:14px;">
         <div id="homeItems"></div>
         <div class="row" style="margin-top:16px;">
           <button class="admin-btn" id="homeSaveBtn" type="button" disabled>Save home page</button>
@@ -832,6 +834,7 @@
   // ================= POEMS =================
 
   var editingPoemKey = null; // null while adding a new poem
+  var poemQuery = '';
   var poemEntries = []; // the list currently shown in "On the site now"
   var editingPoemRef = null; // title + date of the poem being edited (before changes)
   var poemsFetched = false;
@@ -995,9 +998,15 @@
   function renderPoemList(entries){
     var box = $('poemItems');
     box.innerHTML = '';
-    setStatus($('poemListStatus'), entries.length ? '' : 'No poems yet.');
+    var q = poemQuery.trim().toLowerCase();
+    var shown = !q ? entries : entries.filter(function(e){
+      return ((e.title || '') + ' ' + (e.date || '') + ' ' + (e.text || '')).toLowerCase().indexOf(q) !== -1;
+    });
+    setStatus($('poemListStatus'), !entries.length ? 'No poems yet.' :
+      (!shown.length ? 'No poems match “' + poemQuery.trim() + '”.' :
+      (q ? shown.length + ' of ' + entries.length + ' poems' : '')));
     // same order as the public Poetry page: newest first
-    sortNewest(entries).forEach(function(entry){
+    sortNewest(shown).forEach(function(entry){
       var row = document.createElement('div'); row.className = 'entry-row';
       var meta = document.createElement('div'); meta.className = 'meta';
       var h4 = document.createElement('h4'); h4.textContent = entry.title || '(untitled)';
@@ -1019,6 +1028,11 @@
       box.appendChild(row);
     });
   }
+
+  $('poemSearch').addEventListener('input', function(){
+    poemQuery = this.value;
+    renderPoemList(poemEntries);
+  });
 
   function openEditPoem(entry){
     editingPoemKey = keyOf(entry.title, entry.date);
@@ -1618,6 +1632,30 @@
     return b;
   }
 
+  var homeQuery = '';
+  function homeMatch(item){
+    var q = homeQuery.trim().toLowerCase();
+    return !q || ((item.label || '') + ' ' + (item.type || '') + ' ' + (item.date || '')).toLowerCase().indexOf(q) !== -1;
+  }
+  // a small "go to #" box: type a number, press the button or Enter
+  function homePosControl(btnText, tip, onGo){
+    var wrap = document.createElement('span');
+    wrap.style.cssText = 'display:inline-flex;gap:6px;align-items:center;';
+    var inp = document.createElement('input');
+    inp.type = 'number'; inp.min = '1'; inp.placeholder = '#'; inp.title = tip;
+    inp.className = 'admin-input';
+    inp.style.cssText = 'width:64px;margin:0;padding:6px 8px;';
+    function go(){
+      var n = parseInt(inp.value, 10);
+      if (isNaN(n)) return;
+      onGo(n);
+    }
+    inp.addEventListener('keydown', function(ev){ if (ev.key === 'Enter'){ ev.preventDefault(); go(); } });
+    var b = homeButton(btnText, tip, go);
+    wrap.appendChild(inp); wrap.appendChild(b);
+    return wrap;
+  }
+
   function homeRow(item, position, buttons){
     var row = document.createElement('div'); row.className = 'entry-row';
     if (item.thumb){
@@ -1649,8 +1687,18 @@
       none.textContent = 'Nothing is on the home page. Add something from the list below.';
       box.appendChild(none);
     }
+    var shownCount = 0;
     homeList.forEach(function(item, i){
+      if (!homeMatch(item)) return;
+      shownCount++;
       box.appendChild(homeRow(item, i + 1, [
+        homePosControl('Move', 'Move to this position number', function(n){
+          n = Math.max(1, Math.min(homeList.length, n));
+          var moved = homeList.splice(i, 1)[0];
+          homeList.splice(n - 1, 0, moved);
+          renderHome();
+          setStatus($('homeStatus'), '“' + (moved.label || 'Item') + '” is now #' + n + '. Press Save to keep it.');
+        }),
         homeButton('↑', 'Move up', function(){
           var t = homeList[i - 1]; homeList[i - 1] = homeList[i]; homeList[i] = t; renderHome();
         }, i === 0),
@@ -1663,6 +1711,12 @@
       ]));
     });
 
+    if (homeList.length && !shownCount){
+      var nomatch = document.createElement('p');
+      nomatch.textContent = 'Nothing on the home page matches that search.';
+      box.appendChild(nomatch);
+    }
+
     var avail = $('homeAvailable');
     avail.innerHTML = '';
     var onHome = {};
@@ -1674,13 +1728,25 @@
       avail.appendChild(all);
     }
     rest.forEach(function(item){
+      if (!homeMatch(item)) return;
       avail.appendChild(homeRow(item, 0, [
+        homePosControl('Add at #', 'Add at this position number', function(n){
+          n = Math.max(1, Math.min(homeList.length + 1, n));
+          homeList.splice(n - 1, 0, item);
+          renderHome();
+          setStatus($('homeStatus'), '“' + (item.label || 'Item') + '” added at #' + n + '. Press Save to keep it.');
+        }),
         homeButton('Add', 'Add to the bottom of the home page', function(){
           homeList.push(item); renderHome();
         })
       ]));
     });
   }
+
+  $('homeSearch').addEventListener('input', function(){
+    homeQuery = this.value;
+    renderHome();
+  });
 
   $('homeResetBtn').addEventListener('click', function(){
     homeList = homeBaseList.slice();

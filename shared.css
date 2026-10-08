@@ -37,23 +37,22 @@
 
   *{box-sizing:border-box;}
   body{
-    background-color:#6b5a8e;
+    background-color:#05070c;
     color:var(--bone);
     font-family:var(--serif);
     padding-inline:0;
     -webkit-font-smoothing:antialiased;
     position:relative;
   }
-  /* page background: the pink clouds photo, filling the screen and staying
-     still while the page scrolls. to use the plain pale pink (--page-pink
-     above) instead, change content:"" below to content:none and the
-     body background-color to var(--page-pink) */
+  /* page background: the night-sky photo, filling the screen and staying
+     still while the page scrolls. (the old pink clouds photo is still in
+     images/sky.jpg: point the url below back at it to restore it) */
   body::after{
     content:"";
     position:fixed; inset:0;
     z-index:-1;
     pointer-events:none;
-    background:url("images/sky.jpg") center / cover no-repeat;
+    background:url("images/night-sky.jpg") center / cover no-repeat;
   }
   /* canvas grain */
   body::before{
