@@ -1,5 +1,10 @@
 [
   {
+    "type": "essay",
+    "title": "the meaning of life",
+    "date": "10.03.26"
+  },
+  {
     "type": "poem",
     "title": "Forced castration",
     "date": "10.07.26"
@@ -8,11 +13,6 @@
     "type": "poem",
     "title": "A broken mirror",
     "date": "10.05.26"
-  },
-  {
-    "type": "essay",
-    "title": "the meaning of life",
-    "date": "10.03.26"
   },
   {
     "type": "poem",
