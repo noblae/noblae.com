@@ -6,6 +6,16 @@
   },
   {
     "type": "poem",
+    "title": "Anger",
+    "date": "10.11.26"
+  },
+  {
+    "type": "poem",
+    "title": "Forced castration",
+    "date": "10.07.26"
+  },
+  {
+    "type": "poem",
     "title": "A broken mirror",
     "date": "10.05.26"
   },
@@ -13,16 +23,6 @@
     "type": "poem",
     "title": "the penitents of spain",
     "date": "10.02.26"
-  },
-  {
-    "type": "poem",
-    "title": "little boy holding hands with old man",
-    "date": "07.24.25"
-  },
-  {
-    "type": "poem",
-    "title": "androgyny",
-    "date": "08.15.25"
   },
   {
     "type": "essay",
@@ -43,11 +43,6 @@
     "type": "poem",
     "title": "Public crucifixion",
     "date": "09.26.26"
-  },
-  {
-    "type": "poem",
-    "title": "Forced castration",
-    "date": "10.07.26"
   },
   {
     "type": "poem",
@@ -113,6 +108,11 @@
     "type": "poem",
     "title": "failed suicide attempt",
     "date": "10.29.25"
+  },
+  {
+    "type": "poem",
+    "title": "child abuse",
+    "date": "09.17.25"
   },
   {
     "type": "poem",
@@ -221,6 +221,11 @@
   },
   {
     "type": "poem",
+    "title": "A street corner in the ghetto",
+    "date": "10.27.25"
+  },
+  {
+    "type": "poem",
     "title": "invisible power",
     "date": "08.05.25"
   },
@@ -238,65 +243,5 @@
     "type": "poem",
     "title": "Midconversation with a girl on the metro",
     "date": "10.10.26"
-  },
-  {
-    "type": "poem",
-    "title": "A late night in Baltimore",
-    "date": "08.27.26"
-  },
-  {
-    "type": "poem",
-    "title": "Heart attack",
-    "date": "11.29.25"
-  },
-  {
-    "type": "poem",
-    "title": "good night",
-    "date": "08.29.25"
-  },
-  {
-    "type": "poem",
-    "title": "my nephew",
-    "date": "08.20.25"
-  },
-  {
-    "type": "poem",
-    "title": "immortal",
-    "date": "08.17.25"
-  },
-  {
-    "type": "poem",
-    "title": "the oracle",
-    "date": "08.02.25"
-  },
-  {
-    "type": "poem",
-    "title": "in the throes of histrionic despair",
-    "date": "07.28.25"
-  },
-  {
-    "type": "poem",
-    "title": "the sun",
-    "date": "07.28.25"
-  },
-  {
-    "type": "poem",
-    "title": "sunshine",
-    "date": "07.25.25"
-  },
-  {
-    "type": "poem",
-    "title": "sweating in bed on a hot night",
-    "date": "07.18.25"
-  },
-  {
-    "type": "poem",
-    "title": "lying in a field of daisies",
-    "date": "07.08.25"
-  },
-  {
-    "type": "poem",
-    "title": "sun dried raisin face",
-    "date": "07.23.25"
   }
 ]
