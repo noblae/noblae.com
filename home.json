@@ -1,10 +1,5 @@
 [
   {
-    "type": "essay",
-    "title": "the meaning of life",
-    "date": "10.03.26"
-  },
-  {
     "type": "poem",
     "title": "Midconversation with a girl on the metro",
     "date": "10.10.26"
@@ -21,11 +16,6 @@
   },
   {
     "type": "poem",
-    "title": "and here we see",
-    "date": "10.11.26"
-  },
-  {
-    "type": "poem",
     "title": "A model and actress in her mid twenties",
     "date": "10.11.26"
   },
@@ -36,18 +26,18 @@
   },
   {
     "type": "poem",
+    "title": "A dream the night I turned twenty-two",
+    "date": "06.06.24"
+  },
+  {
+    "type": "poem",
+    "title": "and here we see",
+    "date": "10.11.26"
+  },
+  {
+    "type": "poem",
     "title": "seen hanging on a string in the crowded marketplace",
     "date": "09.06.26"
-  },
-  {
-    "type": "poem",
-    "title": "Forced castration",
-    "date": "10.07.26"
-  },
-  {
-    "type": "poem",
-    "title": "prostitute, concrete",
-    "date": "08.17.26"
   },
   {
     "type": "poem",
@@ -61,13 +51,63 @@
   },
   {
     "type": "poem",
+    "title": "prostitute, concrete",
+    "date": "08.17.26"
+  },
+  {
+    "type": "poem",
+    "title": "In last night's dream",
+    "date": "09.29.26"
+  },
+  {
+    "type": "essay",
+    "title": "the meaning of life",
+    "date": "10.03.26"
+  },
+  {
+    "type": "essay",
+    "title": "thought",
+    "date": "10.03.26"
+  },
+  {
+    "type": "poem",
+    "title": "An observation",
+    "date": "09.30.26"
+  },
+  {
+    "type": "poem",
+    "title": "impulse",
+    "date": "10.03.26"
+  },
+  {
+    "type": "poem",
+    "title": "A night in the life of a twenty two year old model",
+    "date": "10.04.26"
+  },
+  {
+    "type": "poem",
+    "title": "Forced castration",
+    "date": "10.07.26"
+  },
+  {
+    "type": "poem",
+    "title": "A day in the life of a twenty two year old model",
+    "date": "10.04.26"
+  },
+  {
+    "type": "poem",
     "title": "the penitents of spain",
     "date": "10.02.26"
   },
   {
-    "type": "essay",
-    "title": "The height of a religious and athletic event",
-    "date": "10.02.26"
+    "type": "poem",
+    "title": "repetition",
+    "date": "09.12.26"
+  },
+  {
+    "type": "poem",
+    "title": "The silhouette of an amputee in a hospital doorway",
+    "date": "09.17.26"
   },
   {
     "type": "essay",
@@ -76,13 +116,38 @@
   },
   {
     "type": "poem",
+    "title": "on fashion",
+    "date": "04.12.26"
+  },
+  {
+    "type": "poem",
+    "title": "A late night in Baltimore",
+    "date": "08.27.26"
+  },
+  {
+    "type": "poem",
+    "title": "good night",
+    "date": "08.29.25"
+  },
+  {
+    "type": "poem",
+    "title": "my nephew",
+    "date": "08.20.25"
+  },
+  {
+    "type": "poem",
+    "title": "immortal",
+    "date": "08.17.25"
+  },
+  {
+    "type": "poem",
     "title": "A disembodied human voice in a prison cell",
     "date": "09.28.26"
   },
   {
-    "type": "poem",
-    "title": "A dream the night I turned twenty-two",
-    "date": "06.06.24"
+    "type": "essay",
+    "title": "The height of a religious and athletic event",
+    "date": "10.02.26"
   },
   {
     "type": "poem",
@@ -105,9 +170,9 @@
     "date": "08.26.26"
   },
   {
-    "type": "essay",
-    "title": "Physiospiritual",
-    "date": "10.05.26"
+    "type": "poem",
+    "title": "on mat four",
+    "date": "11.21.25"
   },
   {
     "type": "poem",
@@ -115,9 +180,14 @@
     "date": "03.11.26"
   },
   {
+    "type": "essay",
+    "title": "Physiospiritual",
+    "date": "10.05.26"
+  },
+  {
     "type": "poem",
-    "title": "on mat four",
-    "date": "11.21.25"
+    "title": "An interview with a warlord turned preacher",
+    "date": "10.04.26"
   },
   {
     "type": "poem",
@@ -145,34 +215,9 @@
     "date": "05.09.25"
   },
   {
-    "type": "poem",
-    "title": "An interview with a warlord turned preacher",
-    "date": "10.04.26"
-  },
-  {
-    "type": "essay",
-    "title": "thought",
-    "date": "10.03.26"
-  },
-  {
     "type": "essay",
     "title": "religion, law, and capitalism",
     "date": "10.04.26"
-  },
-  {
-    "type": "poem",
-    "title": "In last night's dream",
-    "date": "09.29.26"
-  },
-  {
-    "type": "poem",
-    "title": "An observation",
-    "date": "09.30.26"
-  },
-  {
-    "type": "poem",
-    "title": "impulse",
-    "date": "10.03.26"
   },
   {
     "type": "poem",
@@ -181,33 +226,8 @@
   },
   {
     "type": "poem",
-    "title": "A night in the life of a twenty two year old model",
-    "date": "10.04.26"
-  },
-  {
-    "type": "poem",
-    "title": "A day in the life of a twenty two year old model",
-    "date": "10.04.26"
-  },
-  {
-    "type": "poem",
-    "title": "repetition",
-    "date": "09.12.26"
-  },
-  {
-    "type": "poem",
-    "title": "The silhouette of an amputee in a hospital doorway",
-    "date": "09.17.26"
-  },
-  {
-    "type": "poem",
     "title": "drown",
     "date": "08.27.26"
-  },
-  {
-    "type": "poem",
-    "title": "on fashion",
-    "date": "04.12.26"
   },
   {
     "type": "poem",
@@ -218,11 +238,6 @@
     "type": "poem",
     "title": "pale white animal",
     "date": "11.16.25"
-  },
-  {
-    "type": "poem",
-    "title": "A street corner in the ghetto",
-    "date": "10.27.25"
   },
   {
     "type": "poem",
@@ -241,11 +256,6 @@
   },
   {
     "type": "poem",
-    "title": "A late night in Baltimore",
-    "date": "08.27.26"
-  },
-  {
-    "type": "poem",
     "title": "Virginia",
     "date": "08.12.26"
   },
@@ -261,21 +271,6 @@
   },
   {
     "type": "poem",
-    "title": "good night",
-    "date": "08.29.25"
-  },
-  {
-    "type": "poem",
-    "title": "my nephew",
-    "date": "08.20.25"
-  },
-  {
-    "type": "poem",
-    "title": "immortal",
-    "date": "08.17.25"
-  },
-  {
-    "type": "poem",
     "title": "androgyny",
     "date": "08.15.25"
   },
@@ -288,11 +283,6 @@
     "type": "poem",
     "title": "the sun",
     "date": "07.28.25"
-  },
-  {
-    "type": "poem",
-    "title": "child abuse",
-    "date": "09.17.25"
   },
   {
     "type": "poem",
