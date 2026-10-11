@@ -96,11 +96,6 @@
   },
   {
     "type": "poem",
-    "title": "the penitents of spain",
-    "date": "10.02.26"
-  },
-  {
-    "type": "poem",
     "title": "repetition",
     "date": "09.12.26"
   },
@@ -138,11 +133,6 @@
     "type": "poem",
     "title": "immortal",
     "date": "08.17.25"
-  },
-  {
-    "type": "poem",
-    "title": "A disembodied human voice in a prison cell",
-    "date": "09.28.26"
   },
   {
     "type": "essay",
@@ -186,11 +176,6 @@
   },
   {
     "type": "poem",
-    "title": "An interview with a warlord turned preacher",
-    "date": "10.04.26"
-  },
-  {
-    "type": "poem",
     "title": "professional boxer, stadium lights",
     "date": "11.20.25"
   },
@@ -218,6 +203,21 @@
     "type": "essay",
     "title": "religion, law, and capitalism",
     "date": "10.04.26"
+  },
+  {
+    "type": "poem",
+    "title": "A disembodied human voice in a prison cell",
+    "date": "09.28.26"
+  },
+  {
+    "type": "poem",
+    "title": "An interview with a warlord turned preacher",
+    "date": "10.04.26"
+  },
+  {
+    "type": "poem",
+    "title": "the penitents of spain",
+    "date": "10.02.26"
   },
   {
     "type": "poem",
