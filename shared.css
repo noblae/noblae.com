@@ -52,7 +52,19 @@
     position:fixed; inset:0;
     z-index:-1;
     pointer-events:none;
+    /* sharp photo, fit to the screen height, with a dark pink-black wash over it */
+    background:
+      linear-gradient(rgba(40,0,24,.6), rgba(40,0,24,.6)),
+      url("images/roses.jpg") center / auto 100% no-repeat;
+  }
+  /* the same photo, filled across the whole screen and blurred, behind the sharp one */
+  html::before{
+    content:"";
+    position:fixed; inset:-60px;
+    z-index:-2;
+    pointer-events:none;
     background:url("images/roses.jpg") center / cover no-repeat;
+    filter:blur(24px);
   }
   /* canvas grain */
   body::before{
