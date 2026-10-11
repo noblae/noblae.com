@@ -37,7 +37,7 @@
 
   *{box-sizing:border-box;}
   body{
-    background-color:#05070c;
+    background-color:#2a2358;
     color:var(--bone);
     font-family:var(--serif);
     padding-inline:0;
@@ -52,7 +52,7 @@
     position:fixed; inset:0;
     z-index:-1;
     pointer-events:none;
-    background:url("images/night-sky.jpg") center / cover no-repeat;
+    background:url("images/roses.jpg") center / cover no-repeat;
   }
   /* canvas grain */
   body::before{
@@ -189,7 +189,7 @@
     position:relative;
     padding:56px 26px 46px;
     margin:0 -20px 40px;
-    background-color:var(--field-orange);
+    background-color:#c8102e;   /* athletic red banner */
     background-image:none;
     overflow:hidden;
     border-top:none;
@@ -199,7 +199,7 @@
   .field-band.field-void::after{
     content:"";
     position:absolute; inset:0;
-    background:radial-gradient(ellipse at 75% 30%, rgba(58,24,48,.55), transparent 60%);
+    background:radial-gradient(ellipse at 75% 30%, rgba(58,24,48,.45), transparent 60%);
     pointer-events:none;
   }
   h1.hero-title,
