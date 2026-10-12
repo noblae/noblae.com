@@ -36,6 +36,11 @@
   },
   {
     "type": "poem",
+    "title": "and here we see",
+    "date": "10.11.26"
+  },
+  {
+    "type": "poem",
     "title": "The death of a troubled musician",
     "date": "10.04.26"
   },
@@ -68,11 +73,6 @@
     "type": "poem",
     "title": "A dream the night I turned twenty-two",
     "date": "06.06.24"
-  },
-  {
-    "type": "poem",
-    "title": "and here we see",
-    "date": "10.11.26"
   },
   {
     "type": "poem",
