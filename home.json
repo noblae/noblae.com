@@ -66,6 +66,11 @@
   },
   {
     "type": "poem",
+    "title": "An observation",
+    "date": "09.30.26"
+  },
+  {
+    "type": "poem",
     "title": "A day in the life of a twenty two year old model",
     "date": "10.04.26"
   },
@@ -98,11 +103,6 @@
     "type": "essay",
     "title": "thought",
     "date": "10.03.26"
-  },
-  {
-    "type": "poem",
-    "title": "An observation",
-    "date": "09.30.26"
   },
   {
     "type": "poem",
