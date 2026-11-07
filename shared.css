@@ -646,3 +646,6 @@
     .nav-inner{flex-direction:column;align-items:flex-start;gap:10px;}
     nav.links{font-size:.68rem;gap:4px 14px;}
   }
+
+/* hide poem dates (they stay in the page for ordering) */
+.poem-date{display:none !important;}
