@@ -16,19 +16,9 @@
 (function(){
   "use strict";
 
-  var OPTIONS = [10, 25, 50, 100];
-  var DEFAULT = 10;
-  var STORE_KEY = 'noblae-per-page';
+  var PER_PAGE = 4;   // posts shown on each page (change this number to show more or fewer)
   var DATE_RE = /(\d{2})\.(\d{2})\.(\d{2})/;
 
-  function getPerPage(){
-    var n = DEFAULT;
-    try { n = parseInt(localStorage.getItem(STORE_KEY), 10) || DEFAULT; } catch(e){}
-    return OPTIONS.indexOf(n) === -1 ? DEFAULT : n;
-  }
-  function savePerPage(n){
-    try { localStorage.setItem(STORE_KEY, String(n)); } catch(e){}
-  }
   function getPageParam(){
     var m = location.search.match(/[?&]page=(\d+)/);
     return m ? Math.max(1, parseInt(m[1], 10)) : 1;
@@ -71,29 +61,8 @@
       items.forEach(function(el){ list.appendChild(el); });
     }
 
-    var perPage = getPerPage();
+    var perPage = PER_PAGE;
     var page = getPageParam();
-
-    // ---- controls above the list ----
-    var bar = document.createElement('div');
-    bar.className = 'pager-bar';
-    var label = document.createElement('label');
-    label.className = 'pager-size';
-    label.appendChild(document.createTextNode('Show '));
-    var select = document.createElement('select');
-    OPTIONS.forEach(function(n){
-      var o = document.createElement('option');
-      o.value = n; o.textContent = n;
-      if (n === perPage) o.selected = true;
-      select.appendChild(o);
-    });
-    label.appendChild(select);
-    label.appendChild(document.createTextNode(' per page'));
-    var count = document.createElement('span');
-    count.className = 'pager-count';
-    bar.appendChild(label);
-    bar.appendChild(count);
-    list.parentNode.insertBefore(bar, list);
 
     // ---- page numbers below the list ----
     var nav = document.createElement('nav');
@@ -119,8 +88,6 @@
       var start = (page - 1) * perPage, end = Math.min(start + perPage, total);
 
       items.forEach(function(el, i){ el.hidden = i < start || i >= end; });
-      count.textContent = total ? (start + 1) + '–' + end + ' of ' + total : '';
-      bar.hidden = total === 0;
 
       nav.innerHTML = '';
       nav.hidden = pages < 2;
@@ -143,14 +110,8 @@
       page = p;
       setPageParam(page);
       render();
-      if (scroll) bar.scrollIntoView({ block: 'start' });
+      if (scroll) list.scrollIntoView({ block: 'start' });
     }
-
-    select.addEventListener('change', function(){
-      perPage = parseInt(select.value, 10);
-      savePerPage(perPage);
-      go(1, false);
-    });
 
     render();
   };
