@@ -139,6 +139,7 @@
       <button type="button" class="tab-btn" data-tab="poems">Poems</button>
       <button type="button" class="tab-btn" data-tab="essays">Essays</button>
       <button type="button" class="tab-btn" data-tab="videos">Videos</button>
+      <button type="button" class="tab-btn" data-tab="photos">Photography</button>
       <button type="button" class="tab-btn" data-tab="home">Home</button>
       <button type="button" class="tab-btn" data-tab="about">About</button>
     </div>
@@ -258,6 +259,28 @@
         <p>Edit changes a video's link, title or date. Delete removes it from the site (not from YouTube).</p>
         <div id="videoItems"></div>
         <p class="status" id="videoListStatus"></p>
+      </div>
+
+    </div>
+
+    <!-- ================= PHOTOGRAPHY ================= -->
+    <div id="panel-photos" hidden>
+
+      <div class="admin-box">
+        <h3>Add Instagram posts</h3>
+        <textarea class="admin-input" id="photoUrls" rows="4" placeholder="Paste Instagram post links, one per line.&#10;e.g. https://www.instagram.com/p/AbCdEfGhIjK/"></textarea>
+        <p class="fmt-help">On Instagram, open a post, tap the three dots, then Copy link. Reels work too. Your account has to be public for posts to show on the site. The first link you paste ends up on top.</p>
+        <div class="row">
+          <button class="admin-btn" id="photoAddBtn" type="button">Add to Photography</button>
+        </div>
+        <p class="status" id="photoFormStatus"></p>
+      </div>
+
+      <div class="admin-box">
+        <h3>On the site now</h3>
+        <p>Use the arrows to reorder. Remove takes a post off the site (not off Instagram).</p>
+        <div id="photoItems"></div>
+        <p class="status" id="photoListStatus"></p>
       </div>
 
     </div>
@@ -548,7 +571,7 @@
     $('tabs').hidden = !on;
     $('disconnectBtn').hidden = !on;
     if (on){
-      poemsLoaded = false; essaysLoaded = false; videosLoaded = false; homeLoaded = false;
+      poemsLoaded = false; essaysLoaded = false; videosLoaded = false; photosLoaded = false; homeLoaded = false;
       poemsFetched = false; essaysFetched = false; videosFetched = false; imagesFetched = false;
       aboutLoaded = false;
       homeServer = null;
@@ -559,6 +582,7 @@
       $('panel-poems').hidden = true;
       $('panel-essays').hidden = true;
       $('panel-videos').hidden = true;
+      $('panel-photos').hidden = true;
       $('panel-home').hidden = true;
       $('panel-about').hidden = true;
     }
@@ -594,8 +618,8 @@
 
   // ---------- tabs ----------
   var tabBtns = Array.prototype.slice.call(document.querySelectorAll('.tab-btn'));
-  var panels = { images: $('panel-images'), poems: $('panel-poems'), essays: $('panel-essays'), videos: $('panel-videos'), home: $('panel-home'), about: $('panel-about') };
-  var poemsLoaded = false, essaysLoaded = false, videosLoaded = false;
+  var panels = { images: $('panel-images'), poems: $('panel-poems'), essays: $('panel-essays'), videos: $('panel-videos'), photos: $('panel-photos'), home: $('panel-home'), about: $('panel-about') };
+  var poemsLoaded = false, essaysLoaded = false, videosLoaded = false, photosLoaded = false;
 
   function showTab(name){
     tabBtns.forEach(function(b){ b.classList.toggle('active', b.getAttribute('data-tab') === name); });
@@ -603,6 +627,7 @@
     if (name === 'poems' && !poemsLoaded) loadPoems();
     if (name === 'essays' && !essaysLoaded) loadEssays();
     if (name === 'videos' && !videosLoaded) loadVideoList();
+    if (name === 'photos' && !photosLoaded) loadPhotoList();
     if (name === 'home' && !homeLoaded) loadHome();
     if (name === 'about' && !aboutLoaded) loadAbout();
   }
@@ -1786,6 +1811,165 @@
     });
   }
   $('homeSaveBtn').addEventListener('click', homeSave);
+
+  // ================= PHOTOGRAPHY =================
+  // Instagram posts shown on the Photography page. Stored in photography.json
+  // as [{ type: 'p' | 'reel' | 'tv', code }], in display order (top first).
+
+  var PHOTOS = 'photography.json';
+  var photoEntries = [];
+
+  // pulls the type and short code out of any usual Instagram post link
+  function igParse(url){
+    var m = String(url || '').trim().match(/instagram\.com\/(?:[\w.]+\/)?(p|reel|reels|tv)\/([\w-]{5,})/i);
+    if (!m) return null;
+    var t = m[1].toLowerCase();
+    if (t === 'reels') t = 'reel';
+    return { type: t, code: m[2] };
+  }
+  function photoKey(e){ return e.type + '/' + e.code; }
+  function photoLink(e){ return 'https://www.instagram.com/' + e.type + '/' + e.code + '/'; }
+
+  function getPhotos(){
+    return api('/contents/' + PHOTOS + '?ref=' + BRANCH, { allow404: true }).then(function(file){
+      if (!file) return { list: [], sha: null };
+      var list = [];
+      try { list = JSON.parse(b64ToText(file.content) || '[]'); } catch(e){}
+      return { list: Array.isArray(list) ? list : [], sha: file.sha };
+    });
+  }
+  // re-reads the file right before saving, and retries once if it changed meanwhile
+  function updatePhotos(change, message, retried){
+    return getPhotos().then(function(m){
+      var list = change(m.list);
+      if (list === false) throw new Error('Could not find that post — the list may have changed. Refresh and try again.');
+      return api('/contents/' + PHOTOS, { method: 'PUT', body: {
+        message: message,
+        content: textToB64(JSON.stringify(list, null, 2) + '\n'),
+        branch: BRANCH,
+        sha: m.sha || undefined
+      }}).then(function(){ return list; });
+    }).catch(function(err){
+      if (!retried && (err.status === 409 || err.status === 422)) return updatePhotos(change, message, true);
+      throw err;
+    });
+  }
+
+  function loadPhotoList(){
+    photosLoaded = true;
+    setStatus($('photoListStatus'), 'Loading…');
+    getPhotos().then(function(m){
+      photoEntries = m.list;
+      renderPhotoList();
+    }).catch(function(err){
+      if (err.status === 401){ $('disconnectBtn').click(); setStatus($('connectStatus'), 'Your token expired. Connect again.', 'err'); return; }
+      setStatus($('photoListStatus'), 'Couldn’t load posts: ' + err.message, 'err');
+    });
+  }
+
+  function movePhoto(entry, dir, btn){
+    var key = photoKey(entry);
+    btn.disabled = true;
+    updatePhotos(function(list){
+      var i = list.findIndex(function(e){ return photoKey(e) === key; });
+      if (i === -1) return false;
+      var j = i + dir;
+      if (j < 0 || j >= list.length) return list;
+      var t = list[i]; list[i] = list[j]; list[j] = t;
+      return list;
+    }, 'Reorder photography').then(function(list){
+      photoEntries = list;
+      renderPhotoList();
+    }).catch(function(err){
+      btn.disabled = false;
+      setStatus($('photoListStatus'), 'Couldn’t move it: ' + err.message, 'err');
+    });
+  }
+
+  function renderPhotoList(){
+    var box = $('photoItems');
+    box.innerHTML = '';
+    setStatus($('photoListStatus'), photoEntries.length ? '' : 'No posts yet.');
+    photoEntries.forEach(function(entry, i){
+      var row = document.createElement('div'); row.className = 'entry-row';
+      var meta = document.createElement('div'); meta.className = 'meta';
+      var h4 = document.createElement('h4'); h4.textContent = '#' + (i + 1) + ' · ' + (entry.type === 'reel' ? 'Reel' : 'Post');
+      var d = document.createElement('div'); d.className = 'd';
+      var a = document.createElement('a');
+      a.href = photoLink(entry); a.target = '_blank'; a.rel = 'noopener';
+      a.textContent = 'instagram.com/' + entry.type + '/' + entry.code;
+      a.style.color = 'inherit';
+      d.appendChild(a);
+      meta.appendChild(h4); meta.appendChild(d);
+
+      var actions = document.createElement('div'); actions.className = 'actions';
+      var up = document.createElement('button');
+      up.className = 'admin-btn ghost small'; up.type = 'button'; up.textContent = '↑'; up.title = 'Move up';
+      up.disabled = (i === 0);
+      up.addEventListener('click', function(){ movePhoto(entry, -1, up); });
+      var down = document.createElement('button');
+      down.className = 'admin-btn ghost small'; down.type = 'button'; down.textContent = '↓'; down.title = 'Move down';
+      down.disabled = (i === photoEntries.length - 1);
+      down.addEventListener('click', function(){ movePhoto(entry, 1, down); });
+      var del = document.createElement('button');
+      del.className = 'admin-btn ghost small'; del.type = 'button'; del.textContent = 'Remove';
+      del.addEventListener('click', function(){ deletePhoto(entry, del); });
+      actions.appendChild(up); actions.appendChild(down); actions.appendChild(del);
+
+      row.appendChild(meta); row.appendChild(actions);
+      box.appendChild(row);
+    });
+  }
+
+  $('photoAddBtn').addEventListener('click', function(){
+    var lines = $('photoUrls').value.split(/\s+/).filter(Boolean);
+    var fresh = [], bad = 0, seen = {};
+    lines.forEach(function(l){
+      var p = igParse(l);
+      if (!p){ bad++; return; }
+      var k = photoKey(p);
+      if (!seen[k]){ seen[k] = true; fresh.push(p); }
+    });
+    if (!fresh.length) return setStatus($('photoFormStatus'), 'No Instagram post links found. Copy the link from the post’s three-dots menu and try again.', 'err');
+    $('photoAddBtn').disabled = true;
+    setStatus($('photoFormStatus'), 'Saving…');
+    var added = 0;
+    updatePhotos(function(list){
+      var have = {}; list.forEach(function(e){ have[photoKey(e)] = true; });
+      var toAdd = fresh.filter(function(e){ return !have[photoKey(e)]; });
+      added = toAdd.length;
+      return toAdd.concat(list);
+    }, 'Add photography posts').then(function(list){
+      photoEntries = list;
+      renderPhotoList();
+      $('photoUrls').value = '';
+      $('photoAddBtn').disabled = false;
+      var msg = added ? ('Added ' + added + ' post' + (added === 1 ? '' : 's') + '. ') : 'Those were already on the site. ';
+      if (bad) msg += bad + ' link' + (bad === 1 ? '' : 's') + ' skipped (not an Instagram post). ';
+      if (added) msg += (LOCAL ? 'Refresh Photography to see it.' : 'It will show on the site in about a minute.');
+      setStatus($('photoFormStatus'), msg, added ? 'ok' : '');
+    }).catch(function(err){
+      $('photoAddBtn').disabled = false;
+      if (err.status === 401){ $('disconnectBtn').click(); setStatus($('connectStatus'), 'Your token expired. Connect again.', 'err'); return; }
+      setStatus($('photoFormStatus'), 'Something went wrong: ' + err.message, 'err');
+    });
+  });
+
+  function deletePhoto(entry, btn){
+    if (!window.confirm('Remove this post from the site? (It stays on Instagram.)')) return;
+    btn.disabled = true;
+    var key = photoKey(entry);
+    updatePhotos(function(list){
+      var next = list.filter(function(e){ return photoKey(e) !== key; });
+      return next.length === list.length ? false : next;
+    }, 'Remove photography post').then(function(list){
+      photoEntries = list;
+      renderPhotoList();
+    }).catch(function(err){
+      btn.disabled = false;
+      setStatus($('photoListStatus'), 'Couldn’t remove it: ' + err.message, 'err');
+    });
+  }
 
   // ================= ABOUT =================
   // The About page (about.html) is plain text on a red background. Its text

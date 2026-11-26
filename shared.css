@@ -649,3 +649,29 @@
 
 /* hide poem dates (they stay in the page for ordering) */
 .poem-date{display:none !important;}
+
+
+  /* ---------- photography page (Instagram embeds) ---------- */
+  .photo-follow{
+    display:inline-block;margin:0 0 28px;padding:12px 22px;
+    border:1px solid var(--hair);
+    font-family:'IBM Plex Mono',monospace;font-size:.8rem;letter-spacing:.08em;
+    text-decoration:none;color:var(--bone);
+    transition:background .15s, border-color .15s;
+  }
+  .photo-follow:hover{background:var(--field-orange);border-color:var(--field-orange);}
+  .photo-list{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(326px, 1fr));
+    gap:28px;
+    justify-items:center;
+    align-items:start;
+    padding:8px 0 20px;
+  }
+  .photo{width:100%;max-width:540px;}
+  .photo-more-wrap{text-align:center;padding:10px 0 20px;}
+  .photo-more{
+    background:none;border:1px solid var(--hair);color:var(--bone);cursor:pointer;
+    font-family:'IBM Plex Mono',monospace;font-size:.8rem;letter-spacing:.08em;padding:12px 26px;
+  }
+  .photo-more:hover{background:var(--field-orange);border-color:var(--field-orange);}
