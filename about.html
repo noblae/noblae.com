@@ -12,10 +12,10 @@
   body.about-page{background-color:#8c1622; background-image:none;}
   body.about-page main{background:#8c1622; box-shadow:none;}
   .about-block{
-    min-height:68vh;
+    min-height:0;
     display:flex;
     align-items:center;
-    padding:12vh 16%;
+    padding:14vh 16% 5vh;
   }
   #aboutText p{
     font-family:'Playfair Display', Georgia, serif;
@@ -31,8 +31,20 @@
   }
   #aboutText p:last-child{margin-bottom:0;}
   @media (max-width:640px){
-    .about-block{padding:8vh 9%;}
+    .about-block{padding:8vh 9% 4vh;}
     #aboutText p{font-size:24pt;}
+  }
+  .about-tip{padding:0 16% 14vh;}
+  .about-tip .tip-text{
+    font-family:'Playfair Display', Georgia, serif;font-size:36pt;font-weight:400;line-height:1.25;
+    margin:0 0 .7em;max-width:none;color:#0c0708;
+    text-shadow:1px 0 0 rgba(246,178,197,.5), -1px 0 0 rgba(246,178,197,.3);
+  }
+  .about-tip .photo-follow{margin:0;color:#0c0708;border-color:#0c0708;}
+  .about-tip .photo-follow:hover{background:#0c0708;color:#f6b2c5;border-color:#0c0708;}
+  @media (max-width:640px){
+    .about-tip{padding:0 9% 10vh;}
+    .about-tip .tip-text{font-size:24pt;}
   }
 </style>
 </head>
@@ -48,11 +60,11 @@
       <a href="fights.html">Fights</a>
       <a href="artwork.html">Artwork</a>
       -->
-      <a href="essays.html">Essays</a>
+      <a href="essays.html">Philosophy</a>
       <!-- <a href="images.html">Images</a> -->
       <a href="videos.html">Videos</a>
       <a href="modeling.html">Modeling</a>
-      <a href="purchase.html">Purchase</a>
+      <!-- <a href="purchase.html">Purchase</a> -->
       <a href="about.html" class="active">About</a>
     </nav>
   </div>
@@ -63,6 +75,10 @@
     <!-- the text below is edited from the About tab of the admin page -->
     <div class="about-block">
       <div id="aboutText"><p>noblae is the artistic work of David Vincent Dinan</p><p>he lives in Baltimore, MD</p></div>
+    </div>
+    <div class="about-tip">
+      <p class="tip-text">if my writing, modeling or videos mean something to you, you can leave a tip. every bit helps me keep making them.</p>
+      <a class="photo-follow" href="https://ko-fi.com/noblae" target="_blank" rel="noopener">leave a tip on ko-fi</a>
     </div>
   </section>
 </main>
@@ -91,4 +107,5 @@
 
 
 
+<script src="shared.js"></script>
 </body></html>
