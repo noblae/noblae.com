@@ -675,3 +675,15 @@
     font-family:'IBM Plex Mono',monospace;font-size:.8rem;letter-spacing:.08em;padding:12px 26px;
   }
   .photo-more:hover{background:var(--field-orange);border-color:var(--field-orange);}
+
+
+  /* ---------- tip jar (Purchase page) ---------- */
+  .tip-jar{max-width:56ch;padding:6px 0 40px;}
+  .tip-jar h3{
+    font-family:var(--title);font-weight:800;font-size:1.7rem;
+    text-transform:lowercase;margin:0 0 14px;color:var(--bone);
+  }
+  .tip-text{
+    font-family:var(--serif);font-size:1.25rem;line-height:1.7;
+    margin:0 0 26px;color:var(--bone);
+  }
