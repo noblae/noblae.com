@@ -139,7 +139,7 @@
       <button type="button" class="tab-btn" data-tab="poems">Poems</button>
       <button type="button" class="tab-btn" data-tab="essays">Essays</button>
       <button type="button" class="tab-btn" data-tab="videos">Videos</button>
-      <button type="button" class="tab-btn" data-tab="photos">Photography</button>
+      <button type="button" class="tab-btn" data-tab="photos">Modeling</button>
       <button type="button" class="tab-btn" data-tab="home">Home</button>
       <button type="button" class="tab-btn" data-tab="about">About</button>
     </div>
@@ -263,7 +263,7 @@
 
     </div>
 
-    <!-- ================= PHOTOGRAPHY ================= -->
+    <!-- ================= MODELING ================= -->
     <div id="panel-photos" hidden>
 
       <div class="admin-box">
@@ -271,7 +271,7 @@
         <textarea class="admin-input" id="photoUrls" rows="4" placeholder="Paste Instagram post links, one per line.&#10;e.g. https://www.instagram.com/p/AbCdEfGhIjK/"></textarea>
         <p class="fmt-help">On Instagram, open a post, tap the three dots, then Copy link. Reels work too. Your account has to be public for posts to show on the site. The first link you paste ends up on top.</p>
         <div class="row">
-          <button class="admin-btn" id="photoAddBtn" type="button">Add to Photography</button>
+          <button class="admin-btn" id="photoAddBtn" type="button">Add to Modeling</button>
         </div>
         <p class="status" id="photoFormStatus"></p>
       </div>
@@ -1812,11 +1812,11 @@
   }
   $('homeSaveBtn').addEventListener('click', homeSave);
 
-  // ================= PHOTOGRAPHY =================
-  // Instagram posts shown on the Photography page. Stored in photography.json
+  // ================= MODELING =================
+  // Instagram posts shown on the Modeling page. Stored in modeling.json
   // as [{ type: 'p' | 'reel' | 'tv', code }], in display order (top first).
 
-  var PHOTOS = 'photography.json';
+  var PHOTOS = 'modeling.json';
   var photoEntries = [];
 
   // pulls the type and short code out of any usual Instagram post link
@@ -1877,7 +1877,7 @@
       if (j < 0 || j >= list.length) return list;
       var t = list[i]; list[i] = list[j]; list[j] = t;
       return list;
-    }, 'Reorder photography').then(function(list){
+    }, 'Reorder modeling').then(function(list){
       photoEntries = list;
       renderPhotoList();
     }).catch(function(err){
@@ -1939,14 +1939,14 @@
       var toAdd = fresh.filter(function(e){ return !have[photoKey(e)]; });
       added = toAdd.length;
       return toAdd.concat(list);
-    }, 'Add photography posts').then(function(list){
+    }, 'Add modeling posts').then(function(list){
       photoEntries = list;
       renderPhotoList();
       $('photoUrls').value = '';
       $('photoAddBtn').disabled = false;
       var msg = added ? ('Added ' + added + ' post' + (added === 1 ? '' : 's') + '. ') : 'Those were already on the site. ';
       if (bad) msg += bad + ' link' + (bad === 1 ? '' : 's') + ' skipped (not an Instagram post). ';
-      if (added) msg += (LOCAL ? 'Refresh Photography to see it.' : 'It will show on the site in about a minute.');
+      if (added) msg += (LOCAL ? 'Refresh Modeling to see it.' : 'It will show on the site in about a minute.');
       setStatus($('photoFormStatus'), msg, added ? 'ok' : '');
     }).catch(function(err){
       $('photoAddBtn').disabled = false;
@@ -1962,7 +1962,7 @@
     updatePhotos(function(list){
       var next = list.filter(function(e){ return photoKey(e) !== key; });
       return next.length === list.length ? false : next;
-    }, 'Remove photography post').then(function(list){
+    }, 'Remove modeling post').then(function(list){
       photoEntries = list;
       renderPhotoList();
     }).catch(function(err){
