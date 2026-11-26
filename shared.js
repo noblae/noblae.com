@@ -24,3 +24,13 @@
 
   });
 })();
+
+// Your Linktree address goes here. The square button in the footer stays
+// hidden until this is filled in, e.g. 'https://linktr.ee/yourname'
+(function(){
+  var LINKTREE_URL = '';
+  document.addEventListener('DOMContentLoaded', function(){
+    var a = document.getElementById('linktreeLink');
+    if (a && LINKTREE_URL){ a.href = LINKTREE_URL; a.hidden = false; }
+  });
+})();
