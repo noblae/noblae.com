@@ -17,9 +17,9 @@
     --field-blood:#b81f2f;
     --field-blood-2:#7d1420;
     --acid:#e0475a;
-    --bone:#f1e6d6;
+    --bone:#f8f2e8;
     --bone-dim:#caa89d;
-    --line:#f1e6d6;
+    --line:#f8f2e8;
     --hair:#4d2724;
     --page-pink:#ffb6dc;   /* pale hot pink page background around the column */
     --blush:#f6b2c5;   /* pale pink glow on the noblae name */
@@ -708,3 +708,15 @@
   }
   .icon-row a.foot-square{width:38px;flex-shrink:0;padding:0;}
   .icon-row a.foot-rect:hover, .icon-row a.foot-square:hover{background:var(--field-orange);border-color:var(--field-orange);}
+
+
+  /* ---------- footer text matches the menu tabs: same font, colour, lowercase ---------- */
+  footer .label, .icon-row a.foot-rect{
+    font-family:var(--title);
+    font-weight:500;
+    font-size:.95rem;
+    letter-spacing:.04em;
+    text-transform:lowercase;
+    color:var(--bone-dim);
+  }
+  .icon-row a.foot-rect:hover{color:var(--bone);}
